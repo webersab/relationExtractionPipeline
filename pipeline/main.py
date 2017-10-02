@@ -23,6 +23,7 @@ sys.path.insert(0,'/afs/inf.ed.ac.uk/user/l/lguillou/Tools/UnstableParser')
 import udpipe_model as udp
 import unstable_parser as up
 import unstable_parser_post_proc as postproc
+from agdistis import Agdistis
 
 
 # Extract config json from file
@@ -120,19 +121,27 @@ def pre_process_ner(config):
     # Get home directory
     home = config.get('General','home')
     # Get output directory
-    outdir = config.get('GermaNER','pre_proc_out_dir')
+    outdir = config.get('NER','pre_proc_out_dir')
     # Get UDPipe-processed files
     indir = config.get('UDPipe','out_dir')
     files = glob.glob(home+'/'+indir+'/*')
     for f in files:
         tokens = []
+        skip_toks = []
         with open(f, 'r') as infile:
             for line in infile:
                 if line[0] != '#':
                     if line == '\n':
                         tokens.append('\n')
+                        skip_toks = []
                     else:
-                        tokens.append(line.split('\t')[1])
+                        elements = line.split('\t')
+                        if '-' in elements[0]:
+                            skip_toks = elements[0].split('-')
+                            tokens.append(elements[1])
+                        else:
+                            if elements[0] not in skip_toks:
+                                tokens.append(elements[1])
         outfilename = home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.tsv'
         with open(outfilename, 'w') as outfile:
             for tok in tokens:
@@ -148,8 +157,8 @@ def GermaNER(config):
     # Get jar file path
     jar_file = config.get('GermaNER','jar_file')
     # Get input and output directories, and input files
-    indir = config.get('GermaNER','pre_proc_out_dir')
-    outdir = config.get('GermaNER','out_dir')
+    indir = config.get('NER','pre_proc_out_dir')
+    outdir = config.get('NER','out_dir')
     files = glob.glob(home+'/'+indir+'/*.tsv')
     for f in files:
         outfile = home + '/' + outdir + '/' + f.split('/')[-1]
@@ -164,8 +173,8 @@ def StanfordNER(config):
     jar_file = config.get('StanfordNER','jar_file')
     model_file = config.get('StanfordNER','model_file')
     # Get input and output directories, and input files
-    indir = config.get('GermaNER','pre_proc_out_dir')
-    outdir = config.get('StanfordNER','out_dir')
+    indir = config.get('NER','pre_proc_out_dir')
+    outdir = config.get('NER','out_dir')
     files = glob.glob(home+'/'+indir+'/*.tsv')
     # Initialise NER tagger
     st = StanfordNERTagger(model_file, jar_file, encoding='utf-8')
@@ -193,6 +202,49 @@ def StanfordNER(config):
                     outfile.write(tok[0]+'\t'+tok[1]+'\n')
                 outfile.write('\n')
 
+
+def clean_entity_sentence(s):
+    s = s.replace('</entity> <entity>',' ')
+    s.rstrip(' ')
+    return s
+
+
+def format_nel_sentences(filename):
+    sentences = []
+    sent = ''
+    with open(filename) as infile:
+        nerreader = csv.reader(infile, delimiter='\t', quotechar='|')
+        for row in nerreader:
+            if row == []:
+                clean_sent = clean_entity_sentence(sent)
+                sentences.append(clean_sent)
+                sent = ''
+            else:
+                if row[1] == 'O': # Not an entity
+                    sent += row[0] + ' '
+                else:
+                    sent += '<entity>' + row[0] + '</entity> '
+    return sentences
+
+
+# Names Entity linking using Agdistis
+def agdistis(config):
+    home = config.get('General','home')
+    indir = config.get('NER','out_dir')
+    url = config.get('Agdistis','url')
+    files = glob.glob(home+'/'+indir+'/*.tsv')
+    ag = Agdistis(url)
+    for f in files:
+        # Read file and format sentences
+        formatted = format_nel_sentences(f)
+        for sent in formatted:
+            # Disambiguate using NEL
+            #disambig = ag.disambiguate(sent)
+            print(sent)
+            #print(disambig)
+            # Write to file
+
+
 def parse(configmap):
     print('process: parse')
     # Dependency parse with the UnstableParser 
@@ -209,6 +261,8 @@ def NER(configmap):
 #    GermaNER(configmap)
     # Apply NER using Stanford NER
     StanfordNER(configmap)
+    # Apply NEL using Agdistis
+    agdistis(configmap)
 
 
 if __name__ == "__main__":
