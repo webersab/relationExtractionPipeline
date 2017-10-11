@@ -6,6 +6,8 @@
 # https://github.com/ufal/udpipe/blob/master/bindings/python/examples/udpipe_model.py
 
 # Standard
+import io
+import collections
 import sys
 import codecs
 import locale
@@ -14,6 +16,7 @@ import csv
 import ConfigParser
 import logging
 import subprocess
+import simplejson as json
 from datetime import datetime
 from multiprocessing import Process
 from nltk.tag import StanfordNERTagger
@@ -203,46 +206,88 @@ def StanfordNER(config):
                 outfile.write('\n')
 
 
+# Clean up after multi-word-spanning entities
 def clean_entity_sentence(s):
     s = s.replace('</entity> <entity>',' ')
     s.rstrip(' ')
+#    s_utf8 = s.decode('utf-8')
+#    print(s_utf8)
     return s
 
 
+# Add <entity></entity> tags around each NE
 def format_nel_sentences(filename):
     sentences = []
     sent = ''
-    with open(filename) as infile:
+    entity = False
+    counter = 0
+    with open(filename, 'r') as infile:
         nerreader = csv.reader(infile, delimiter='\t', quotechar='|')
         for row in nerreader:
             if row == []:
                 clean_sent = clean_entity_sentence(sent)
-                sentences.append(clean_sent)
+                sentences.append((counter,int(entity),clean_sent))
                 sent = ''
+                entity = False
+                counter += 1
             else:
                 if row[1] == 'O': # Not an entity
                     sent += row[0] + ' '
                 else:
+                    entity = True
                     sent += '<entity>' + row[0] + '</entity> '
     return sentences
 
 
-# Names Entity linking using Agdistis
+# Named Entity linking using Agdistis
 def agdistis(config):
     home = config.get('General','home')
     indir = config.get('NER','out_dir')
+    outdir = config.get('Agdistis','out_dir')
     url = config.get('Agdistis','url')
     files = glob.glob(home+'/'+indir+'/*.tsv')
     ag = Agdistis(url)
     for f in files:
         # Read file and format sentences
         formatted = format_nel_sentences(f)
+        nel = {"file": f, "sentences": {}}
         for sent in formatted:
-            # Disambiguate using NEL
-            #disambig = ag.disambiguate(sent)
-            print(sent)
-            #print(disambig)
-            # Write to file
+            if sent[1] == 1:
+                # Disambiguate using NEL
+                disambig = ag.disambiguate(sent[2])
+                # Map to Freebase, convert to dictionary 
+                converted = map_and_convert_nel(sent[2], disambig)
+                nel["sentences"][sent[0]] = converted
+        # Write to file
+        outfilename = home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.json'
+        with io.open(outfilename, 'w', encoding='utf8') as outfile:
+            data = json.dumps(nel, ensure_ascii=False)
+            outfile.write(unicode(data))
+
+
+def convert(data):
+    if isinstance(data, basestring):
+        return str(data)
+    elif isinstance(data, collections.Mapping):
+        return dict(map(convert, data.iteritems()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(convert, data))
+    else:
+        return data
+
+
+def map_and_convert_nel(sent_str, nel_output):
+    conv_nel = {"sentenceStr": sent_str, "entities": {}}
+    counter = 0
+    for e in nel_output:
+        dbpedia_url = e["disambiguatedURL"]
+        # Map to Freebase
+        freebase_url = "freebase.org"
+        e["freebaseURL"] = freebase_url
+        conv = convert(e)
+        conv_nel["entities"][counter] = conv
+        counter += 1
+    return conv_nel
 
 
 def parse(configmap):
