@@ -7,6 +7,7 @@
 
 # Standard
 import io
+import gzip
 import collections
 import sys
 import codecs
@@ -120,6 +121,7 @@ def post_process_parsed_output(config):
             postproc.restore(originalfile, infile, outdir)
 
 
+# Read UDPipe files and output one token per line, save as a text file
 def pre_process_ner(config):
     # Get home directory
     home = config.get('General','home')
@@ -209,9 +211,7 @@ def StanfordNER(config):
 # Clean up after multi-word-spanning entities
 def clean_entity_sentence(s):
     s = s.replace('</entity> <entity>',' ')
-    s.rstrip(' ')
-#    s_utf8 = s.decode('utf-8')
-#    print(s_utf8)
+    s = s.rstrip(' ')
     return s
 
 
@@ -240,7 +240,7 @@ def format_nel_sentences(filename):
 
 
 # Named Entity linking using Agdistis
-def agdistis(config):
+def agdistis(config, f_map):
     home = config.get('General','home')
     indir = config.get('NER','out_dir')
     outdir = config.get('Agdistis','out_dir')
@@ -256,7 +256,7 @@ def agdistis(config):
                 # Disambiguate using NEL
                 disambig = ag.disambiguate(sent[2])
                 # Map to Freebase, convert to dictionary 
-                converted = map_and_convert_nel(sent[2], disambig)
+                converted = map_and_convert_nel(sent[2], disambig, f_map)
                 nel["sentences"][sent[0]] = converted
         # Write to file
         outfilename = home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.json'
@@ -265,6 +265,7 @@ def agdistis(config):
             outfile.write(unicode(data))
 
 
+# Convert unicode to string
 def convert(data):
     if isinstance(data, basestring):
         return str(data)
@@ -276,19 +277,36 @@ def convert(data):
         return data
 
 
-def map_and_convert_nel(sent_str, nel_output):
+# Map the DBPedia urls to Freebase urls
+def map_and_convert_nel(sent_str, nel_output, f_map):
     conv_nel = {"sentenceStr": sent_str, "entities": {}}
     counter = 0
     for e in nel_output:
         dbpedia_url = e["disambiguatedURL"]
         # Map to Freebase
-        freebase_url = "freebase.org"
+        if dbpedia_url in f_map:
+            freebase_url = f_map[dbpedia_url]
+        else:
+            freebase_url = "no_freebase_link"
         e["freebaseURL"] = freebase_url
         conv = convert(e)
         conv_nel["entities"][counter] = conv
         counter += 1
     return conv_nel
 
+
+def get_freebase_mapping(config):
+    m = {}
+    freebasefile = config.get('Freebase','freebase_links_file')
+    with gzip.open(freebasefile, 'r') as f:
+        for line in f:
+            if line[0] != '#':
+                elements = line.split(' ')
+                dbpedia_url = elements[0].lstrip('<').rstrip('>')
+                freebase_url = elements[2].lstrip('<').rstrip('>')
+                m[dbpedia_url] = freebase_url
+    return m
+    
 
 def parse(configmap):
     print('process: parse')
@@ -307,8 +325,9 @@ def NER(configmap):
     # Apply NER using Stanford NER
     StanfordNER(configmap)
     # Apply NEL using Agdistis
-    agdistis(configmap)
-
+    freebase_map = get_freebase_mapping(configmap)
+    agdistis(configmap, freebase_map)
+    
 
 if __name__ == "__main__":
     # Set up logging
