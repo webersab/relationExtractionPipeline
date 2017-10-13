@@ -29,19 +29,18 @@ class NerNel():
     def __init__(self, config):
         self.config = config
         self.home = self.config.get('General', 'home')
-
+        
 
     def NER(self):
         print('process: NER')
         # Format file with one token per line (take tokenisation from UDPipe)
-        self.pre_process_ner()
+#        self.pre_process_ner()
         # Apply NER using GermaNER
         # GermaNER(configmap)
         # Apply NER using Stanford NER
-        self.StanfordNER()
+#        self.StanfordNER()
         # Apply NEL using Agdistis
-        freebase_map = self.get_freebase_mapping()
-        self.agdistis(freebase_map)
+        self.agdistis()
 
 
     # Read UDPipe files and output one token per line, save as a text file
@@ -76,7 +75,8 @@ class NerNel():
                     else:
                         outfile.write(tok+'\n')
 
-
+                        
+    # Perform NER using GermaNER
     def GermaNER(self):
         # Get jar file path
         jar_file = self.config.get('GermaNER','jar_file')
@@ -90,6 +90,7 @@ class NerNel():
             subprocess.call(['java', '-jar', jar_file, '-t', f, '-o', outfile])
 
 
+    # Perform NER using Stanford NER
     def StanfordNER(self):
         # Get jar file path
         jar_file = self.config.get('StanfordNER','jar_file')
@@ -157,7 +158,7 @@ class NerNel():
 
 
     # Named Entity linking using Agdistis
-    def agdistis(self, f_map):
+    def agdistis(self):
         indir = self.config.get('NER','out_dir')
         outdir = self.config.get('Agdistis','out_dir')
         url = self.config.get('Agdistis','url')
@@ -172,7 +173,7 @@ class NerNel():
                     # Disambiguate using NEL
                     disambig = ag.disambiguate(sent[2])
                     # Map to Freebase, convert to dictionary 
-                    converted = self.map_and_convert_nel(sent[2], disambig, f_map)
+                    converted = self.map_and_convert_nel(sent[2], disambig)
                     nel["sentences"][sent[0]] = converted
             # Write to file
             outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.json'
@@ -184,43 +185,44 @@ class NerNel():
     # Convert unicode to string
     # Taken from StackOverflow:
     # https://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
-    def convert(self, data):
+    def convert_unicode_to_str(self, data):
         if isinstance(data, basestring):
             return data.encode('utf-8')
         elif isinstance(data, collections.Mapping):
-            return dict(map(self.convert, data.iteritems()))
+            return dict(map(self.convert_unicode_to_str, data.iteritems()))
         elif isinstance(data, collections.Iterable):
-            return type(data)(map(self.convert, data))
+            return type(data)(map(self.convert_unicode_to_str, data))
         else:
             return data
 
 
     # Map the DBPedia urls to Freebase urls
-    def map_and_convert_nel(self, sent_str, nel_output, f_map):
+    def map_and_convert_nel(self, sent_str, nel_output):
+        # Get DBPedia to FIGER mapping
+        mapfile = self.config.get('TypeMapping','map_file')
+        with gzip.open(mapfile, 'r') as mfile:
+            m = json.load(mfile)
         conv_nel = {"sentenceStr": sent_str, "entities": {}}
         counter = 0
         for e in nel_output:
             dbpedia_url = e["disambiguatedURL"]
-            # Map to Freebase
-            if dbpedia_url in f_map:
-                freebase_url = f_map[dbpedia_url]
-            else:
-                freebase_url = "no_freebase_link"
+            # Map to Freebase url, freebase type, FIGER type
+            freebase_url = "none"
+            freebase_type = "none"
+            figer_type = "none"
+            if dbpedia_url in m:
+                if "freebase_url" in m[dbpedia_url]:
+                    freebase_url = m[dbpedia_url]["freebase_url"]
+                if "freebase_type" in m[dbpedia_url]:
+                    freebase_type = m[dbpedia_url]["freebase_type"]
+                if "figer_type" in m[dbpedia_url]:
+                    figer_type = m[dbpedia_url]["figer_type"]
             e["freebaseURL"] = freebase_url
-            conv = self.convert(e)
+            e["freebaseType"] = freebase_type
+            e["FIGERType"] = figer_type
+            conv = self.convert_unicode_to_str(e)
             conv_nel["entities"][counter] = conv
             counter += 1
         return conv_nel
 
 
-    def get_freebase_mapping(self):
-        m = {}
-        freebasefile = self.config.get('Freebase','freebase_links_file')
-        with gzip.open(freebasefile, 'r') as f:
-            for line in f:
-                if line[0] != '#':
-                    elements = line.split(' ')
-                    dbpedia_url = elements[0].lstrip('<').rstrip('>')
-                    freebase_url = elements[2].lstrip('<').rstrip('>')
-                    m[dbpedia_url] = freebase_url
-        return m

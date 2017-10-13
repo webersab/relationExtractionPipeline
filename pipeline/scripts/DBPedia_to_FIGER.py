@@ -1,5 +1,10 @@
-import gzip
+# Script to produce a mapping from DBPedia links output by the
+# named entity linker (AGDISTIS) to FIGER types (via Freebase)
 
+import gzip
+import simplejson as json
+
+outputfile = 'dbpedia_figer_map.json.gz'
 freebaselinkfile = 'freebase_links_de.ttl.gz'
 freebasetypefile = 'entity2type_names.txt.gz'
 figertypefile = 'types.map.gz'
@@ -53,14 +58,48 @@ def dbpedia_to_figer(dbpedia,freebase,figer):
         for ft in freebase_type:
             if ft in figer and figer[ft] != '':
                 figer_type.append(figer[ft])
-        m[dbplink] = [freebase_url, freebase_type, figer_type]
+        m[dbplink] = {"freebase_url": freebase_url,
+                      "freebase_type": freebase_type,
+                      "figer_type": figer_type}
     return m
 
+#def dbpedia_to_figer(dbpedia,freebase,figer):
+#    m = {}
+#    for dbplink in dbpedia:
+#        freebase_type = []
+#        figer_type = []
+#        freebase_url = dbpedia[dbplink]
+#        if freebase_url in freebase:
+#            freebase_type = freebase[freebase_url]
+#        for ft in freebase_type:
+#            if ft in figer and figer[ft] != '':
+#                figer_type.append(figer[ft])
+#        m[dbplink] = [freebase_url, freebase_type, figer_type]
+#        return m
+
+#def write_map_to_file(m):
+#    with gzip.open(outputfile, 'w') as o:
+#        for dbpedia in m:
+#            entry = dbpedia # DBPedia url
+#            entry += '\t' + m[dbpedia][0] # Freebase url
+#            entry += '\t' + ' '.join(m[dbpedia][1]) # Freebase type
+#            entry += '\t' + ' '.join(m[dbpedia][2]) # FIGER type
+#            o.write(entry+'\n')
+
+# Get DBPedia url -> Freebase url links (from DBPedia Freebase links)
 res = dbpedia_url_to_freebase_url()
 dbpedia_to_freebase = res[0]
 freebaselinks = res[1]
+# Get Freebase type(s) from Freebase (using mapping file from Javad)
 res = freebase_url_to_type(freebaselinks)
 freebase_url_to_type = res[0]
 freebasetypes = res[1]
+# Get FIGER type from Freebase type
+# Using mapping from: https://github.com/xiaoling/figer
 freebase_to_figer = freebase_type_to_figer_type(freebasetypes)
 map_to_figer = dbpedia_to_figer(dbpedia_to_freebase,freebase_url_to_type,freebase_to_figer)
+# Output mapping to file
+with gzip.open(outputfile, 'w') as o:
+    json.dump(map_to_figer, o)
+#write_map_to_file(map_to_figer)
+
