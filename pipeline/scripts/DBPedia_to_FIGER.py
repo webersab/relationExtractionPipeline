@@ -58,10 +58,20 @@ def dbpedia_to_figer(dbpedia,freebase,figer):
         for ft in freebase_type:
             if ft in figer and figer[ft] != '':
                 figer_type.append(figer[ft])
-        m[dbplink] = {"freebase_url": freebase_url,
-                      "freebase_type": freebase_type,
-                      "figer_type": figer_type}
+            else:
+                figer_type.append('')
+#        m[dbplink] = {"freebase_url": freebase_url,
+#                      "freebase_type": freebase_type,
+#                      "figer_type": figer_type}
+        m[dbplink] = get_first_non_empty_figer(figer_type)
     return m
+
+def get_first_non_empty_figer(l):
+    for t in l:
+        if t != '':
+            return t
+    return ''
+
 
 #def dbpedia_to_figer(dbpedia,freebase,figer):
 #    m = {}

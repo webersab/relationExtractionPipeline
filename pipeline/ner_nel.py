@@ -34,11 +34,11 @@ class NerNel():
     def NER(self):
         print('process: NER')
         # Format file with one token per line (take tokenisation from UDPipe)
-#        self.pre_process_ner()
+        self.pre_process_ner()
         # Apply NER using GermaNER
         # GermaNER(configmap)
         # Apply NER using Stanford NER
-#        self.StanfordNER()
+        self.StanfordNER()
         # Apply NEL using Agdistis
         self.agdistis()
 
@@ -157,6 +157,14 @@ class NerNel():
         return sentences
 
 
+    # Get DBPedia to FIGER mapping
+    def get_dbpedia_to_figer_mapping(self):
+        mapfile = self.config.get('TypeMapping','map_file')
+        with gzip.open(mapfile, 'r') as mfile:
+            m = json.load(mfile)
+        return m
+
+    
     # Named Entity linking using Agdistis
     def agdistis(self):
         indir = self.config.get('NER','out_dir')
@@ -164,6 +172,8 @@ class NerNel():
         url = self.config.get('Agdistis','url')
         files = glob.glob(self.home+'/'+indir+'/*.tsv')
         ag = Agdistis(url)
+        # Get DBPedia to FIGER mapping
+        type_map = get_dbpedia_to_figer_mapping()
         for f in files:
             # Read file and format sentences
             formatted = self.format_nel_sentences(f)
@@ -173,7 +183,7 @@ class NerNel():
                     # Disambiguate using NEL
                     disambig = ag.disambiguate(sent[2])
                     # Map to Freebase, convert to dictionary 
-                    converted = self.map_and_convert_nel(sent[2], disambig)
+                    converted = self.map_and_convert_nel(sent[2], disambig, type_map)
                     nel["sentences"][sent[0]] = converted
             # Write to file
             outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.json'
@@ -197,28 +207,14 @@ class NerNel():
 
 
     # Map the DBPedia urls to Freebase urls
-    def map_and_convert_nel(self, sent_str, nel_output):
-        # Get DBPedia to FIGER mapping
-        mapfile = self.config.get('TypeMapping','map_file')
-        with gzip.open(mapfile, 'r') as mfile:
-            m = json.load(mfile)
+    def map_and_convert_nel(self, sent_str, nel_output, m):
         conv_nel = {"sentenceStr": sent_str, "entities": {}}
         counter = 0
         for e in nel_output:
             dbpedia_url = e["disambiguatedURL"]
-            # Map to Freebase url, freebase type, FIGER type
-            freebase_url = "none"
-            freebase_type = "none"
             figer_type = "none"
-            if dbpedia_url in m:
-                if "freebase_url" in m[dbpedia_url]:
-                    freebase_url = m[dbpedia_url]["freebase_url"]
-                if "freebase_type" in m[dbpedia_url]:
-                    freebase_type = m[dbpedia_url]["freebase_type"]
-                if "figer_type" in m[dbpedia_url]:
-                    figer_type = m[dbpedia_url]["figer_type"]
-            e["freebaseURL"] = freebase_url
-            e["freebaseType"] = freebase_type
+            if dbpedia_url in m and m[dbpedia_url] != '':
+                figer_type = m[dbpedia_url]
             e["FIGERType"] = figer_type
             conv = self.convert_unicode_to_str(e)
             conv_nel["entities"][counter] = conv
