@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# HELPFUL starter code
-# https://github.com/ufal/udpipe/blob/master/bindings/python/examples/run_udpipe.py
-# https://github.com/ufal/udpipe/blob/master/bindings/python/examples/udpipe_model.py
-
 # Standard
 import io
 import gzip
