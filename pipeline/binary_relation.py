@@ -9,9 +9,13 @@ import glob
 import csv
 import ConfigParser
 import logging
-import simplejson as json
-from nltk.parse import DependencyGraph
+#import simplejson as json
+#from nltk.parse import DependencyGraph
 from itertools import chain
+
+# Custom
+import helper_functions as hf
+
 
 class BinaryRelation():
 
@@ -28,41 +32,44 @@ class BinaryRelation():
         dpfiles = glob.glob(self.home+'/'+dpindir+'/*')
         for df in dpfiles:
             # Read dependency parse
-            dtree = self.read_dependency_parse(df)
+            dtree = hf.dependency_parse_to_graph(df)
             # Read entities
             filenamestem = df.split('/')[-1].split('.')[0]
             ef = entfilepath+'/'+filenamestem+'.json'
-            entities = self.read_entities(ef)
+            entities = hf.read_json(ef)
+            print "-------------------------------------"
+            nouns = hf.extract_pos_from_dependency_parse(dtree, 'NOUN')
+            print(nouns)
             # Extract binary relations
             relations = self.extract(dtree, entities)
             # Write to file
             self.write_to_file(relations)
             
 
-    # Read the dependency parser output
-    def read_dependency_parse(self, filename):
-        data = ''
-        dtree = []
-        with open(filename, 'r') as f:
-            for line in f:
-                if 'root' in line:
-                    elements = line.split('\t')
-                    if elements[7] == 'root':
-                        elements[7] = 'ROOT'
-                        line = '\t'.join(elements)
-                data += line
-                if line == '\n':
-                    dg = DependencyGraph(data.decode('utf8'))
-                    dtree.append(dg)
-                    data = ''
-        return dtree
+#    # Read the dependency parser output
+#    def read_dependency_parse(self, filename):
+#        data = ''
+#        dtree = []
+#        with open(filename, 'r') as f:
+#            for line in f:
+#                if 'root' in line:
+#                    elements = line.split('\t')
+#                    if elements[7] == 'root':
+#                        elements[7] = 'ROOT'
+#                        line = '\t'.join(elements)
+#                data += line
+#                if line == '\n':
+#                    dg = DependencyGraph(data.decode('utf8'))
+#                    dtree.append(dg)
+#                    data = ''
+#        return dtree
 
                     
-    # Read the entity linker output
-    def read_entities(self, filename):
-        with open(filename, 'r') as f:
-            entities = json.load(f)
-        return entities
+#    # Read the entity linker output
+#    def read_named_entities(self, filename):
+#        with open(filename, 'r') as f:
+#            entities = json.load(f)
+#        return entities
 
 
     # Convert character offset to token offset
@@ -155,6 +162,7 @@ class BinaryRelation():
         return formatted
 
 
+    # Format the binary relations ready for printing
     def format_relations(self, rels, ents):
         result = []
         d = {}
@@ -235,7 +243,7 @@ if __name__ == "__main__":
     cfg.read(configfile)
     bin_rel = BinaryRelation(cfg)
     
-    dtrees = bin_rel.read_dependency_parse('test.conllu')
+    dtrees = hf.dependency_parse_to_graph('test.conllu')
     
     test_entities = {"file": "none", "sentences": {0: {"entities": {0: {"start": 20, "disambiguatedURL": "http://de.dbpedia.org/resource/Deutsche_Demokratische_Republik", "namedEntity": "DDR", "FIGERType": "/location/country", "offset": 3}, 1: {"start": 0, "disambiguatedURL": "http://de.dbpedia.org/resource/Angela_Merkel", "namedEntity": "Merkel", "FIGERType": "/person/politician", "offset": 6}}, "sentenceStr": "<entity>Merkel</entity> wuchs in der <entity>DDR</entity> auf und war dort als Physikerin wissenschaftlich tätig ."}, 1: {"entities": {0: {"start": 0, "disambiguatedURL": "http://de.dbpedia.org/resource/David_Bowie", "namedEntity": "David Bowie", "FIGERType": "/person", "offset": 11}, 1: {"start": 20, "disambiguatedURL": "null", "namedEntity": "britischer", "FIGERType": "none", "offset": 10}}, "sentenceStr": "<entity>David Bowie</entity> war ein <entity>britischer</entity> Musiker , Sänger , Produzent und Schauspieler ."}}}
 

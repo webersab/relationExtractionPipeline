@@ -4,7 +4,7 @@
 # Standard
 import io
 import gzip
-import collections
+#import collections
 import sys
 import codecs
 import glob
@@ -17,6 +17,7 @@ from nltk.tag import StanfordNERTagger
 
 
 # Custom
+import helper_functions as hf
 from agdistis import Agdistis
 
 
@@ -188,18 +189,18 @@ class NerNel():
                 outfile.write(unicode(data))
 
 
-    # Convert unicode to string
-    # Taken from StackOverflow:
-    # https://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
-    def convert_unicode_to_str(self, data):
-        if isinstance(data, basestring):
-            return data.encode('utf-8')
-        elif isinstance(data, collections.Mapping):
-            return dict(map(self.convert_unicode_to_str, data.iteritems()))
-        elif isinstance(data, collections.Iterable):
-            return type(data)(map(self.convert_unicode_to_str, data))
-        else:
-            return data
+#    # Convert unicode to string
+#    # Taken from StackOverflow:
+#    # https://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
+#    def convert_unicode_to_str(self, data):
+#        if isinstance(data, basestring):
+#            return data.encode('utf-8')
+#        elif isinstance(data, collections.Mapping):
+#            return dict(map(self.convert_unicode_to_str, data.iteritems()))
+#        elif isinstance(data, collections.Iterable):
+#            return type(data)(map(self.convert_unicode_to_str, data))
+#        else:
+#            return data
 
 
     # Map the DBPedia urls to Freebase urls
@@ -212,7 +213,7 @@ class NerNel():
             if dbpedia_url in m and m[dbpedia_url] != '':
                 figer_type = m[dbpedia_url]
             e["FIGERType"] = figer_type
-            conv = self.convert_unicode_to_str(e)
+            conv = hf.convert_unicode_to_str(e)
             conv_nel["entities"][counter] = conv
             counter += 1
         return conv_nel
