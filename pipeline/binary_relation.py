@@ -38,7 +38,7 @@ class BinaryRelation():
             ef = entfilepath+'/'+filenamestem+'.json'
             entities = hf.read_json(ef)
             print "-------------------------------------"
-            nouns = hf.extract_pos_from_dependency_parse(dtree, 'NOUN')
+            nouns = hf.extract_entities_from_dependency_parse(dtree, 'NOUN')
             print(nouns)
             # Extract binary relations
             relations = self.extract(dtree, entities)

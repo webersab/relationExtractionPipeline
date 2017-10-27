@@ -25,15 +25,31 @@ def dependency_parse_to_graph(filename):
     return dtree
 
 
-# Extract all tokens / multi-token spans of a particular PoS from a dependency parse
-def extract_pos_from_dependency_parse(dtrees, postag):
-    l = []
+# Extract all tokens / multi-token spans from a dependency parse
+def extract_entities_from_dependency_parse(dtrees, postag):
+    d = {'sentence': {}}
     for x in range(0,len(dtrees)):
+        d['sentence'][x+1] = {'entities':{}}
+        counter = 0
+        tok_list = []
+        index_list = []
         for node_index in dtrees[x].nodes:
             node = dtrees[x].nodes[node_index]
             if node['ctag'] == postag:
-                l.append((x, node_index, node['ctag'], node['word']))
-    return l
+                tok_list.append(node['word'])
+                index_list.append(node_index)
+            else:
+                if tok_list != []:
+                    # Add entity to dictionary
+                    span = ' '.join(tok_list)
+                    starttok = index_list[0]
+                    endtok = index_list[-1]
+                    entity = {'entityStr': span, 'start_tok': starttok, 'end_tok': endtok}
+                    d['sentence'][x+1]['entities'][counter] = entity
+                    counter += 1
+                    tok_list = []
+                    index_list = []
+    return d
 
 
 # Read a json file to a json object
