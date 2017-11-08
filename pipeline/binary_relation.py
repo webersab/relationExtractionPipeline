@@ -9,8 +9,6 @@ import glob
 import csv
 import ConfigParser
 import logging
-#import simplejson as json
-#from nltk.parse import DependencyGraph
 from itertools import chain
 
 # Custom
@@ -27,6 +25,7 @@ class BinaryRelation():
     # Extract binary relations by combining output of the dependency parser and entity linker
     def extract_binary_relations(self):
         print('process: Extract binary relations')
+        common_entities = self.config.get('NEL','common_entities')
         entfilepath = self.config.get('Agdistis', 'out_dir')
         dpindir = self.config.get('UnstableParser','post_proc_out_dir')
         dpfiles = glob.glob(self.home+'/'+dpindir+'/*')
@@ -36,42 +35,52 @@ class BinaryRelation():
             # Read entities
             filenamestem = df.split('/')[-1].split('.')[0]
             ef = entfilepath+'/'+filenamestem+'.json'
-            entities = hf.read_json(ef)
+            ne = hf.read_json(ef)
             print "-------------------------------------"
-            nouns = hf.extract_entities_from_dependency_parse(dtree, 'NOUN')
-            print(nouns)
+            if common_entities == 'spotlight':
+                # Read common entities
+                commonfilepath = self.config.get('Spotlight', 'out_dir')
+                cf = commonfilepath+'/'+filenamestem+'.json'
+                cn = hf.read_json(cf)
+                merged = self.merge_entities(cn, ne)
+                entities = self.calculate_token_spans_entities(dtree, merged)
+                print common_entities
+            else:
+                entities = self.calculate_token_spans_entities(dtree, ne)
+            print "------"
+            print entities
+            print "--------------"
             # Extract binary relations
             relations = self.extract(dtree, entities)
             # Write to file
             self.write_to_file(relations)
-            
-
-#    # Read the dependency parser output
-#    def read_dependency_parse(self, filename):
-#        data = ''
-#        dtree = []
-#        with open(filename, 'r') as f:
-#            for line in f:
-#                if 'root' in line:
-#                    elements = line.split('\t')
-#                    if elements[7] == 'root':
-#                        elements[7] = 'ROOT'
-#                        line = '\t'.join(elements)
-#                data += line
-#                if line == '\n':
-#                    dg = DependencyGraph(data.decode('utf8'))
-#                    dtree.append(dg)
-#                    data = ''
-#        return dtree
-
-                    
-#    # Read the entity linker output
-#    def read_named_entities(self, filename):
-#        with open(filename, 'r') as f:
-#            entities = json.load(f)
-#        return entities
 
 
+    # Merge entities already identitified by AGDISTIS with those from Spotlight output
+    def merge_entities(self, spot, agdis):
+        a = {}
+        # Read AGDISTIS entities
+        for sents in agdis['sentences']:
+            for ent in agdis['sentences'][sents]['entities']:
+                e = agdis['sentences'][sents]['entities'][ent]
+                print e
+                k = str(sents) + '_' + str(e['start']) + '_' + str(e['offset'])
+                a[k] = e['namedEntity']
+        # Merge in the Spotlight entities
+        for sents in spot['sentences']:
+            for ent in spot['sentences'][sents]['entities']:
+                e = spot['sentences'][sents]['entities'][ent]
+                print e
+                k = str(sents) + '_'+ str(e['start']) + '_' + str(e['offset'])
+                if k not in a: # New entity
+                    if sents in agdis['sentences']:
+                        ent_num = sorted(agdis['sentences'][sents]['entities'].keys())[-1]
+                        agdis['sentences'][sents]['entities'][ent_num] = e
+                    else:
+                        agdis['sentences'][sents] = {'entities':{0:e}}
+        return agdis
+    
+                        
     # Convert character offset to token offset
     def convert_offsets(self,sentence):
         conv = {}
@@ -83,15 +92,13 @@ class BinaryRelation():
                 counter += 1
         return conv
     
-    
-    # Perform the extraction
-    def extract(self, dt, ent):
-        rels = {}
+
+    # Calculate the token spans from character offsets
+    def calculate_token_spans_entities(self, dt, ent):
         # Find start and end tokens for entities from character start and offset
         for sent in ent['sentences']:
             dpsenttree = dt[int(sent)]
             sentstring = self.get_sentence(dpsenttree)
-            print sentstring
             char_to_tok = self.convert_offsets(sentstring)
             for entity in ent['sentences'][sent]['entities']:
                 e = ent['sentences'][sent]['entities'][entity]
@@ -101,9 +108,22 @@ class BinaryRelation():
                 endtok = char_to_tok[start+offset-1]
                 ent['sentences'][sent]['entities'][entity]['starttok'] = starttok
                 ent['sentences'][sent]['entities'][entity]['endtok'] = endtok
-            updatedentities = ent['sentences'][sent]['entities']
+                if isinstance(e['namedEntity'], (int,long)):
+                    string_value = str(e['namedEntity'])
+                    ent['sentences'][sent]['entities'][entity]['namedEntity'] = string_value
+        return ent
+
+
+    # Perform the extraction
+    def extract(self, dt, ent):
+        rels = {}
+        for sent in ent['sentences']:
+            dpsenttree = dt[int(sent)]
+            sentstring = self.get_sentence(dpsenttree)
+            print sentstring
+            entities = ent['sentences'][sent]['entities']
             # Get relations
-            r = self.get_relations(dpsenttree, updatedentities)
+            r = self.get_relations(dpsenttree, entities)
             rels[sent] = {'sentence': sentstring, 'relations': r}
             print(rels)
         return rels
@@ -148,8 +168,8 @@ class BinaryRelation():
         for rd in rel_deps:
             entity_number = ent_span_heads[rd[0]]
             entity_string = ent[entity_number]['namedEntity'].replace(' ','_')
-            pred = dt.nodes[rd[1]]['word'] # Replace with lemma?
-            if rd[1] in preds:
+            pred = dt.nodes[rd[1]]['word'] # Replace with lemma? if pred == None then it was the root???
+            if pred and rd[1] in preds:
                 for element in preds[rd[1]]['compound']:
                     pred += '_'+dt.nodes[element]['word'] # Change order and use lemma so that wuchs_auf -> aufwachsen?
                 if preds[rd[1]]['case']:
@@ -195,7 +215,7 @@ class BinaryRelation():
         children = sorted(chain.from_iterable(dt.nodes[node_index]['deps'].values()))
         for child_index in children:
             child_node = dt.nodes[child_index]
-            res = self.rels_and_preds(rels, preds, e, child_index, child_node)
+            res = self.get_rels_and_preds(rels, preds, e, child_index, child_node)
             rels = res[0]
             preds = res[1]
             self.traverse_parse_tree(dt, e, child_index, rels, preds)
@@ -203,7 +223,7 @@ class BinaryRelation():
 
 
     # Extract information on relations and predicates, to be used in constructing binary relations
-    def rels_and_preds(self, rels, preds, e, child_index, child_node):
+    def get_rels_and_preds(self, rels, preds, e, child_index, child_node):
         # Get arcs pointing from the entity node (outgoing)
         if child_index in e:
             rels.append((child_index, child_node['head'], child_node['rel']))

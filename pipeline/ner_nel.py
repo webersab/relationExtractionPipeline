@@ -4,7 +4,6 @@
 # Standard
 import io
 import gzip
-#import collections
 import sys
 import codecs
 import glob
@@ -19,6 +18,7 @@ from nltk.tag import StanfordNERTagger
 # Custom
 import helper_functions as hf
 from agdistis import Agdistis
+from dbpedia_spotlight import DBPediaSpotlight
 
 
 class NerNel():
@@ -31,14 +31,18 @@ class NerNel():
     def NER(self):
         print('process: NER')
         # Format file with one token per line (take tokenisation from UDPipe)
-        self.pre_process_ner()
+#        self.pre_process_ner()
         # Apply NER using GermaNER
         # GermaNER(configmap)
         # Apply NER using Stanford NER
-        self.StanfordNER()
+#        self.StanfordNER()
         # Apply NEL using Agdistis
         self.agdistis()
-
+        common_entities = self.config.get('NEL', 'common_entities')
+        if common_entities == 'spotlight':
+            # Apply entity disambiguation using DBPedia Spotlight
+            self.dbpspotlight()
+        
 
     # Read UDPipe files and output one token per line, save as a text file
     def pre_process_ner(self):
@@ -48,14 +52,28 @@ class NerNel():
         indir = self.config.get('UDPipe','out_dir')
         files = glob.glob(self.home+'/'+indir+'/*')
         for f in files:
+            sentences = self.extract_sentences(f)
+            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.tsv'
+            with open(outfilename, 'w') as outfile:
+                for sent in sentences:
+                    for tok in sent:
+                        outfile.write(tok+'\n')
+                    outfile.write('\n')
+
+
+    # Extract sentences from UDPipe output
+    def extract_sentences(self, filename):
+        with open(filename,'r') as f:
             tokens = []
             skip_toks = []
-            with open(f, 'r') as infile:
-                for line in infile:
+            sentences = []
+            with open(filename, 'r') as f:
+                for line in f:
                     if line[0] != '#':
                         if line == '\n':
-                            tokens.append('\n')
-                            skip_toks = []
+                            if tokens != []: # In case of multiple empty lines
+                                sentences.append(tokens)
+                            tokens = []
                         else:
                             elements = line.split('\t')
                             if '-' in elements[0]:
@@ -64,14 +82,8 @@ class NerNel():
                             else:
                                 if elements[0] not in skip_toks:
                                     tokens.append(elements[1])
-            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.tsv'
-            with open(outfilename, 'w') as outfile:
-                for tok in tokens:
-                    if tok == '\n':
-                        outfile.write(tok)
-                    else:
-                        outfile.write(tok+'\n')
-
+            return sentences
+    
                         
     # Perform NER using GermaNER
     def GermaNER(self):
@@ -170,7 +182,7 @@ class NerNel():
         files = glob.glob(self.home+'/'+indir+'/*.tsv')
         ag = Agdistis(url)
         # Get DBPedia to FIGER mapping
-        type_map = get_dbpedia_to_figer_mapping()
+        type_map = self.get_dbpedia_to_figer_mapping()
         for f in files:
             # Read file and format sentences
             formatted = self.format_nel_sentences(f)
@@ -189,19 +201,59 @@ class NerNel():
                 outfile.write(unicode(data))
 
 
-#    # Convert unicode to string
-#    # Taken from StackOverflow:
-#    # https://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
-#    def convert_unicode_to_str(self, data):
-#        if isinstance(data, basestring):
-#            return data.encode('utf-8')
-#        elif isinstance(data, collections.Mapping):
-#            return dict(map(self.convert_unicode_to_str, data.iteritems()))
-#        elif isinstance(data, collections.Iterable):
-#            return type(data)(map(self.convert_unicode_to_str, data))
-#        else:
-#            return data
+    # 
+                
+    # Disambiguate entities using DBPedia Spotlight
+    def dbpspotlight(self):
+        # Get UDPipe-processed files
+        indir = self.config.get('UDPipe','out_dir')
+        outdir = self.config.get('Spotlight','out_dir')
+        url = self.config.get('Spotlight','url')
+        confidence = self.config.get('Spotlight','confidence')
+        support = self.config.get('Spotlight','support')
+        spot = DBPediaSpotlight(url)
+        files = glob.glob(self.home+'/'+indir+'/*')
+        # Get DBPedia to FIGER mapping
+        type_map = self.get_dbpedia_to_figer_mapping()
+        for f in files:
+            nel = {"file": f, "sentences": {}}
+            sentences = self.extract_sentences(f)
+            for x in range(0,len(sentences)):
+                sentstring = ' '.join(sentences[x])
+                annotations = spot.disambiguate(sentstring, confidence=confidence, support=support)
+                renamed = self.rename_spotlight_keys(annotations)
+                converted = self.map_and_convert_nel(sentstring, renamed, type_map)
+                nel["sentences"][x] = converted
+            # Write to file
+            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.json'
+            with io.open(outfilename, 'w', encoding='utf8') as outfile:
+                data = json.dumps(nel, ensure_ascii=False)
+                outfile.write(unicode(data))
 
+
+    # Rename keys from dbpedia spotlight to match those produced by Agdistis
+    def rename_spotlight_keys(self, anns):
+        renamed = []
+        for a in anns:
+            r = {}
+            offset = 0
+            for prop in a:
+                if prop == 'URI':
+                    r['disambiguatedURL'] = a[prop]
+                elif prop == 'offset':
+                    r['start'] = a[prop]
+                elif prop == 'surfaceForm':
+                    r['namedEntity'] = a[prop]
+                    if isinstance(a[prop], (int,long)):
+                        offset = len(str(a[prop]))
+                    else:
+                        offset = len(a[prop].encode('utf-8'))
+                else:
+                    r[prop] = a[prop]
+            r['offset'] = offset
+            renamed.append(r)
+        return renamed
+        
 
     # Map the DBPedia urls to Freebase urls
     def map_and_convert_nel(self, sent_str, nel_output, m):

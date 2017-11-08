@@ -44,7 +44,7 @@ if __name__ == "__main__":
 #    parse_proc.start()
     ner = ner_nel.NerNel(configmap)
     ner_proc = Process(target=ner.NER)
-#    ner_proc.start()
+    ner_proc.start()
     # Extract binary relations
     bin_rel = binary_relation.BinaryRelation(configmap)
     bin_rel.extract_binary_relations()

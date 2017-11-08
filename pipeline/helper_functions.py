@@ -27,9 +27,9 @@ def dependency_parse_to_graph(filename):
 
 # Extract all tokens / multi-token spans from a dependency parse
 def extract_entities_from_dependency_parse(dtrees, postag):
-    d = {'sentence': {}}
+    d = {'sentences': {}}
     for x in range(0,len(dtrees)):
-        d['sentence'][x+1] = {'entities':{}}
+        d['sentences'][x+1] = {'entities':{}}
         counter = 0
         tok_list = []
         index_list = []
@@ -44,8 +44,8 @@ def extract_entities_from_dependency_parse(dtrees, postag):
                     span = ' '.join(tok_list)
                     starttok = index_list[0]
                     endtok = index_list[-1]
-                    entity = {'entityStr': span, 'start_tok': starttok, 'end_tok': endtok}
-                    d['sentence'][x+1]['entities'][counter] = entity
+                    entity = {'entity': span, 'starttok': starttok, 'endtok': endtok}
+                    d['sentences'][x+1]['entities'][counter] = entity
                     counter += 1
                     tok_list = []
                     index_list = []

@@ -13,7 +13,7 @@ class Agdistis(object):
         self.defaultAgdistisParams = {
             'text': 'Die Stadt <entity>Dresden</entity> liegt in <entity>Sachsen</entity>',
             'type': 'agdistis'
-            }
+            } # Change type to 'candidates' to get multiple results with scores (for amiguous entities)
 
     def disambiguate(self, text):
         """
@@ -38,7 +38,7 @@ class Agdistis(object):
         return self.disambiguate("<entity>%s</entity>"%(entity,))
 
 if __name__ == "__main__":
-    agdistis = Agdistis()
+    agdistis = Agdistis('http://139.18.2.164:8080/AGDISTIS_DE')
     entities = agdistis.disambiguate('<entity>Austria</entity>')
     entities = agdistis.disambiguateEntity('Austria')
     print(entities)
