@@ -22,7 +22,8 @@ class UDPipeModel:
 
     def tokenize(self, text):
         """Tokenize the text and return list of ufal.udpipe.Sentence-s."""
-        tokenizer = self.model.newTokenizer(self.model.TOKENIZER_NORMALIZED_SPACES)
+        #tokenizer = self.model.newTokenizer(self.model.TOKENIZER_NORMALIZED_SPACES)
+        tokenizer = self.model.newTokenizer("normalized_spaces;presegmented")
         if not tokenizer:
             raise Exception("The model does not have a tokenizer")
         return self._read(text, tokenizer)

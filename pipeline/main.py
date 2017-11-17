@@ -16,7 +16,8 @@ from multiprocessing import Process
 # Custom
 import preprocessing as pre
 import parsing
-import ner_nel
+import ner
+import nel
 import binary_relation
 
 
@@ -35,18 +36,23 @@ if __name__ == "__main__":
     configfile = sys.argv[1]
     # Get configuration settings
     configmap = get_config(configfile)
-    # Pre-process files with UDPipe
+    # Sentence segmentation
     preprocessor = pre.Preprocessor(configmap)
+    preprocessor.split_sentences()
+    # Pre-process files with UDPipe
     preprocessor.udpipe()
     # Simultaneously parse and perform NER
     parser = parsing.Parser(configmap)
     parse_proc = Process(target=parser.parse)
 #    parse_proc.start()
-    ner = ner_nel.NerNel(configmap)
-    ner_proc = Process(target=ner.NER)
-    ner_proc.start()
+    ne_rec = ner.Ner(configmap)
+    ner_proc = Process(target=ne_rec.NER)
+#    ner_proc.start()
+    # Named Entity Linking
+#    n_link = nel.Nel(configmap)
+#    n_link.NEL()
     # Extract binary relations
-    bin_rel = binary_relation.BinaryRelation(configmap)
-    bin_rel.extract_binary_relations()
+#    bin_rel = binary_relation.BinaryRelation(configmap)
+#    bin_rel.extract_binary_relations()
     # Exit
     logging.info('Finished at: '+str(datetime.now())+'\n\n')

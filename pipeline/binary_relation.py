@@ -9,7 +9,9 @@ import glob
 import csv
 import ConfigParser
 import logging
+import networkx
 from itertools import chain
+from itertools import product
 
 # Custom
 import helper_functions as hf
@@ -36,20 +38,24 @@ class BinaryRelation():
             filenamestem = df.split('/')[-1].split('.')[0]
             ef = entfilepath+'/'+filenamestem+'.json'
             ne = hf.read_json(ef)
-            print "-------------------------------------"
-            if common_entities == 'spotlight':
-                # Read common entities
-                commonfilepath = self.config.get('Spotlight', 'out_dir')
-                cf = commonfilepath+'/'+filenamestem+'.json'
-                cn = hf.read_json(cf)
-                merged = self.merge_entities(cn, ne)
-                entities = self.calculate_token_spans_entities(dtree, merged)
-                print common_entities
-            else:
-                entities = self.calculate_token_spans_entities(dtree, ne)
-            print "------"
-            print entities
-            print "--------------"
+#            print "-------------------------------------"
+#            if common_entities == 'spotlight':
+#                # Read common entities
+#                commonfilepath = self.config.get('Spotlight', 'out_dir')
+#                cf = commonfilepath+'/'+filenamestem+'.json'
+#                cn = hf.read_json(cf)
+#                merged = self.merge_entities(cn, ne)
+#                print "++++++++++++++++++++++"
+#                print merged
+#                print "++++++++++++++++++++++"
+#                entities = self.calculate_token_spans_entities(dtree, merged)
+#                print common_entities
+#            else:
+#                entities = self.calculate_token_spans_entities(dtree, ne)
+            entities = self.calculate_token_spans_entities(dtree, ne)
+            #print "------"
+            #print entities
+            #print "--------------"
             # Extract binary relations
             relations = self.extract(dtree, entities)
             # Write to file
@@ -63,18 +69,17 @@ class BinaryRelation():
         for sents in agdis['sentences']:
             for ent in agdis['sentences'][sents]['entities']:
                 e = agdis['sentences'][sents]['entities'][ent]
-                print e
                 k = str(sents) + '_' + str(e['start']) + '_' + str(e['offset'])
                 a[k] = e['namedEntity']
         # Merge in the Spotlight entities
         for sents in spot['sentences']:
             for ent in spot['sentences'][sents]['entities']:
                 e = spot['sentences'][sents]['entities'][ent]
-                print e
                 k = str(sents) + '_'+ str(e['start']) + '_' + str(e['offset'])
                 if k not in a: # New entity
                     if sents in agdis['sentences']:
-                        ent_num = sorted(agdis['sentences'][sents]['entities'].keys())[-1]
+                        last_ent_num = sorted(agdis['sentences'][sents]['entities'].keys())[-1]
+                        ent_num = str(int(last_ent_num)+1)
                         agdis['sentences'][sents]['entities'][ent_num] = e
                     else:
                         agdis['sentences'][sents] = {'entities':{0:e}}
@@ -84,7 +89,6 @@ class BinaryRelation():
     # Convert character offset to token offset
     def convert_offsets(self,sentence):
         conv = {}
-#        sent = sentence.replace('<entity>','').replace('</entity>','')
         counter = 1
         for x in range(0,len(sentence)):
             conv[x] = counter
@@ -125,7 +129,7 @@ class BinaryRelation():
             # Get relations
             r = self.get_relations(dpsenttree, entities)
             rels[sent] = {'sentence': sentstring, 'relations': r}
-            print(rels)
+        print(rels)
         return rels
 
 
@@ -140,8 +144,62 @@ class BinaryRelation():
         return s
     
 
-    # Find the binary relations
     def get_relations(self, dt, ent):
+        rels = []
+        multidi = dt.nx_graph()
+        g = multidi.to_undirected()
+#        print ent
+#        print "---"
+        print dt
+#        print "---"
+#        print g.nodes()
+#        print g.edges()
+        ent_list = ent.keys()
+#        print(ent_list)
+        # For every pair of entities:
+        for pair in product(ent_list, repeat=2):
+            if pair[0] != pair[1] and ent[pair[0]]['starttok'] < ent[pair[1]]['starttok']:
+#                print "ent pair",  pair
+                ent1start = ent[pair[0]]['starttok']
+                ent2start = ent[pair[1]]['starttok']
+#                print ent1start, ent2start
+                try:
+                    #print(networkx.has_path(g,source=ent1start,target=ent2start))
+                    shortest_path = networkx.shortest_path(g,source=ent1start,target=ent2start)
+                    sorted_path = sorted(shortest_path)
+                    print shortest_path
+#                    print sorted_path
+                    if len(shortest_path) >= 3:
+#                        print shortest_path
+                        ent1end = ent[pair[0]]['endtok']
+                        x = (ent1end-ent1start) + 1
+                        pred_list = shortest_path[x:-1]
+                        pred_tok_list = []
+                        for p in pred_list:
+                            pred_tok_list.append(dt.nodes[p]['word'])
+                        pred = '_'.join(pred_tok_list)
+                        ent1 = ent[pair[0]]['namedEntity']
+                        ent2 = ent[pair[1]]['namedEntity']
+                        string = self.format_relation_string(ent[pair[0]], ent[pair[1]], pred)
+                        rels.append((ent1,ent2,pred,string))
+                except networkx.NetworkXNoPath:
+                    print "no path found"
+#                print "-"
+        print "----------------"
+        return rels
+
+
+    def format_relation_string(self, ent1, ent2, pred):
+        s = '(' + pred + '.1,' + pred + '.2)'
+        s += '#none' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
+        s += '#none' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
+        s += '::' + ent1['namedEntity']
+        s += '::' + ent2['namedEntity']
+        return s
+    
+    
+    # Find the binary relations
+    def get_relations_old(self, dt, ent):
         print dt
         print('...ENTITY SPANS...')
         # Identify entity spans (just get the heads)
@@ -161,29 +219,41 @@ class BinaryRelation():
         res = self.traverse_parse_tree(dt, ent_span_heads, 0, [], {})
         rel_deps = res[0]
         preds = res[1]
+        print "REL DEPS:"
         print(rel_deps)
+        print "PREDS:"
         print(preds)
+        print "ENTITIES:"
+        print ent
         # Build relations
         r = []
-        for rd in rel_deps:
-            entity_number = ent_span_heads[rd[0]]
-            entity_string = ent[entity_number]['namedEntity'].replace(' ','_')
-            pred = dt.nodes[rd[1]]['word'] # Replace with lemma? if pred == None then it was the root???
-            if pred and rd[1] in preds:
-                for element in preds[rd[1]]['compound']:
-                    pred += '_'+dt.nodes[element]['word'] # Change order and use lemma so that wuchs_auf -> aufwachsen?
-                if preds[rd[1]]['case']:
-                    case = dt.nodes[preds[rd[1]]['case']]['word']
-                    pred += ':' + case
-            print(entity_string, pred, rd[2])
-            r.append((entity_number, pred))
+        for p in preds:
+            if p != 0:
+                p_string = dt.nodes[p]['word'] # Replace with lemma? if pred == None then it was the root??? 
+                for element in preds[p]['compound']:
+                    p_string += '_'+dt.nodes[element]['word'] # Change order and use lemma so that wuchs_auf -> aufwachsen?
+                if preds[p]['case']:
+                    case = dt.nodes[preds[p]['case']]['word']
+                    p_string += ':' + case
+                preds[p]['string'] = p_string
+        print(preds)
+        for rd in sorted(rel_deps, key=lambda tup: tup[0]):
+            if rd[1] != 0:
+                print "rd:", rd
+                entity_number = ent_span_heads[rd[0]]
+                entity_string = ent[entity_number]['namedEntity'].replace(' ','_')
+                pred = preds[rd[1]]['string']
+                print(entity_string, pred, rd[2])
+                r.append((entity_number, pred))
+        print "R"
+        print r
         print('------')
         formatted = self.format_relations(r, ent)
         return formatted
 
 
     # Format the binary relations ready for printing
-    def format_relations(self, rels, ents):
+    def format_relations_old(self, rels, ents):
         result = []
         d = {}
         for r in rels:
@@ -191,6 +261,8 @@ class BinaryRelation():
                 d[r[1]].append(r[0])
             else:
                 d[r[1]] = [r[0]]
+        print "D"
+        print d
         for pred in d:
             if pred != 'none' and len(d[pred]) == 2: # Binary relation
                 # Sort the arguments of the predicates
@@ -250,7 +322,7 @@ class BinaryRelation():
             for sent_no in sent_list:
                 s = 'line: ' + r[sent_no]['sentence'] + '\n'
                 for rel in r[sent_no]['relations']:
-                    s += rel + '\n'
+                    s += rel[3] + '\n'
                 s += '\n'
                 f.write(s)
 

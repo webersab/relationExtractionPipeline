@@ -6,6 +6,7 @@ import sys
 import codecs
 import glob
 import logging
+import nltk.data
 from datetime import datetime
 
 # Custom
@@ -16,12 +17,32 @@ class Preprocessor():
 
     def __init__(self, config):
         self.config = config
+        # Get home directory
+        self.home = self.config.get('General','home')
 
-
+        
+    # Split sentences using NLTKs PunktTokenizer
+    def split_sentences(self):
+        indir = self.config.get('Input','data')
+        outdir = self.config.get('Preprocessor','out_dir')
+        model = self.config.get('Preprocessor','seg_model')
+        splitter = nltk.data.load(model)
+        files = glob.glob(self.home+'/'+indir+'/*.txt')
+        for infile in files:
+            # Read text
+            with open(infile) as i:
+                text = ''.join(i.readlines())
+            # Sentence split text
+            segs = splitter.tokenize(text.decode('utf-8'))
+            outfilename = infile.split('/')[-1]
+            outfile = self.home+'/'+outdir+'/'+outfilename
+            with codecs.open(outfile, 'w', 'utf-8') as o:
+                for seg in segs:
+                    o.write(seg+'\n')
+                    
+            
     # UDPipe pre-processing
     def udpipe(self):
-        # Get home directory
-        home = self.config.get('General','home')
         # Get UDPipe configurations
         outformat = self.config.get('UDPipe','out_format')
         outdir = self.config.get('UDPipe','out_dir')
@@ -38,8 +59,8 @@ class Preprocessor():
         logging.info('...complete')
         # Process input files
         logging.info('Processing input files:')
-        indir = self.config.get('Input','data')
-        files = glob.glob(home+'/'+indir+'/*.txt') 
+        indir = self.config.get('Preprocessor','out_dir')
+        files = glob.glob(self.home+'/'+indir+'/*.txt') 
         for infile in files:
             logging.info('  '+infile)
             # Read text
@@ -53,6 +74,6 @@ class Preprocessor():
             # Output to file
             conllu = model.write(sentences, outformat)
             outfilename = infile.split('/')[-1].split('.')[0]+'.conllu'
-            outfile = home+'/'+outdir+'/'+outfilename
+            outfile = self.home+'/'+outdir+'/'+outfilename
             with codecs.open(outfile, 'w', 'utf-8') as o:
                 o.write(conllu)

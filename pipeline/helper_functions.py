@@ -12,44 +12,61 @@ def dependency_parse_to_graph(filename):
     dtree = []
     with open(filename, 'r') as f:
         for line in f:
-            if 'root' in line:
-                elements = line.split('\t')
-                if elements[7] == 'root':
-                    elements[7] = 'ROOT'
-                    line = '\t'.join(elements)
-            data += line
-            if line == '\n':
-                dg = DependencyGraph(data.decode('utf8'))
-                dtree.append(dg)
-                data = ''
+            if line[0] != '#':
+                if 'root' in line:
+                    elements = line.split('\t')
+                    if elements[7] == 'root':
+                        elements[7] = 'ROOT'
+                        line = '\t'.join(elements)
+                data += line
+                if line == '\n':
+                    dg = DependencyGraph(data.decode('utf8'))
+                    dtree.append(dg)
+                    data = ''
     return dtree
 
 
 # Extract all tokens / multi-token spans from a dependency parse
 def extract_entities_from_dependency_parse(dtrees, postag):
-    d = {'sentences': {}}
+    sents = []
     for x in range(0,len(dtrees)):
-        d['sentences'][x+1] = {'entities':{}}
-        counter = 0
         tok_list = []
-        index_list = []
         for node_index in dtrees[x].nodes:
-            node = dtrees[x].nodes[node_index]
-            if node['ctag'] == postag:
-                tok_list.append(node['word'])
-                index_list.append(node_index)
-            else:
-                if tok_list != []:
-                    # Add entity to dictionary
-                    span = ' '.join(tok_list)
-                    starttok = index_list[0]
-                    endtok = index_list[-1]
-                    entity = {'entity': span, 'starttok': starttok, 'endtok': endtok}
-                    d['sentences'][x+1]['entities'][counter] = entity
-                    counter += 1
-                    tok_list = []
-                    index_list = []
-    return d
+            if node_index != 0:
+                node = dtrees[x].nodes[node_index]
+                if node['ctag'] == postag:
+                    tok_list.append((node['word'],postag))
+                else:
+                    tok_list.append((node['word'],'O'))
+        sents.append(tok_list)
+    return sents
+
+
+# Extract all tokens / multi-token spans from a dependency parse
+#def extract_entities_from_dependency_parse(dtrees, postag):
+#    d = {'sentences': {}}
+#    for x in range(0,len(dtrees)):
+#        d['sentences'][x+1] = {'entities':{}}
+#        counter = 0
+#        tok_list = []
+#        index_list = []
+#        for node_index in dtrees[x].nodes:
+#            node = dtrees[x].nodes[node_index]
+#            if node['ctag'] == postag:
+#                tok_list.append(node['word'])
+#                index_list.append(node_index)
+#            else:
+#                if tok_list != []:
+#                    # Add entity to dictionary
+#                    span = ' '.join(tok_list)
+#                    starttok = index_list[0]
+#                    endtok = index_list[-1]
+#                    entity = {'entity': span, 'starttok': starttok, 'endtok': endtok}
+#                    d['sentences'][x+1]['entities'][counter] = entity
+#                    counter += 1
+#                    tok_list = []
+#                    index_list = []
+#    return d
 
 
 # Read a json file to a json object
