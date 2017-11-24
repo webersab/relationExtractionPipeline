@@ -26,11 +26,11 @@ class Ner():
     def NER(self):
         print('process: NER')
         # Format file with one token per line (take tokenisation from UDPipe)
-#        self.pre_process_ner()
+        self.pre_process_ner()
         # Apply NER using GermaNER
         # GermaNER(configmap)
         # Apply NER using Stanford NER
-#        self.StanfordNER()
+        self.StanfordNER()
         
 
     # Read UDPipe files and output one token per line, save as a text file

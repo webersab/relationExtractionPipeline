@@ -38,52 +38,35 @@ class BinaryRelation():
             filenamestem = df.split('/')[-1].split('.')[0]
             ef = entfilepath+'/'+filenamestem+'.json'
             ne = hf.read_json(ef)
-#            print "-------------------------------------"
-#            if common_entities == 'spotlight':
-#                # Read common entities
-#                commonfilepath = self.config.get('Spotlight', 'out_dir')
-#                cf = commonfilepath+'/'+filenamestem+'.json'
-#                cn = hf.read_json(cf)
-#                merged = self.merge_entities(cn, ne)
-#                print "++++++++++++++++++++++"
-#                print merged
-#                print "++++++++++++++++++++++"
-#                entities = self.calculate_token_spans_entities(dtree, merged)
-#                print common_entities
-#            else:
-#                entities = self.calculate_token_spans_entities(dtree, ne)
             entities = self.calculate_token_spans_entities(dtree, ne)
-            #print "------"
-            #print entities
-            #print "--------------"
             # Extract binary relations
             relations = self.extract(dtree, entities)
             # Write to file
             self.write_to_file(relations)
 
 
-    # Merge entities already identitified by AGDISTIS with those from Spotlight output
-    def merge_entities(self, spot, agdis):
-        a = {}
-        # Read AGDISTIS entities
-        for sents in agdis['sentences']:
-            for ent in agdis['sentences'][sents]['entities']:
-                e = agdis['sentences'][sents]['entities'][ent]
-                k = str(sents) + '_' + str(e['start']) + '_' + str(e['offset'])
-                a[k] = e['namedEntity']
-        # Merge in the Spotlight entities
-        for sents in spot['sentences']:
-            for ent in spot['sentences'][sents]['entities']:
-                e = spot['sentences'][sents]['entities'][ent]
-                k = str(sents) + '_'+ str(e['start']) + '_' + str(e['offset'])
-                if k not in a: # New entity
-                    if sents in agdis['sentences']:
-                        last_ent_num = sorted(agdis['sentences'][sents]['entities'].keys())[-1]
-                        ent_num = str(int(last_ent_num)+1)
-                        agdis['sentences'][sents]['entities'][ent_num] = e
-                    else:
-                        agdis['sentences'][sents] = {'entities':{0:e}}
-        return agdis
+#    # Merge entities already identitified by AGDISTIS with those from Spotlight output
+#    def merge_entities(self, spot, agdis):
+#        a = {}
+#        # Read AGDISTIS entities
+#        for sents in agdis['sentences']:
+#            for ent in agdis['sentences'][sents]['entities']:
+#                e = agdis['sentences'][sents]['entities'][ent]
+#                k = str(sents) + '_' + str(e['start']) + '_' + str(e['offset'])
+#                a[k] = e['namedEntity']
+#        # Merge in the Spotlight entities
+#        for sents in spot['sentences']:
+#            for ent in spot['sentences'][sents]['entities']:
+#                e = spot['sentences'][sents]['entities'][ent]
+#                k = str(sents) + '_'+ str(e['start']) + '_' + str(e['offset'])
+#                if k not in a: # New entity
+#                    if sents in agdis['sentences']:
+#                        last_ent_num = sorted(agdis['sentences'][sents]['entities'].keys())[-1]
+#                        ent_num = str(int(last_ent_num)+1)
+#                        agdis['sentences'][sents]['entities'][ent_num] = e
+#                    else:
+#                        agdis['sentences'][sents] = {'entities':{0:e}}
+#        return agdis
     
                         
     # Convert character offset to token offset
@@ -175,13 +158,19 @@ class BinaryRelation():
                         x = (ent1end-ent1start) + 1
                         pred_list = shortest_path[x:-1]
                         pred_tok_list = []
+                        pred_pos_list = []
                         for p in pred_list:
                             pred_tok_list.append(dt.nodes[p]['word'])
+                            pred_pos_list.append(dt.nodes[p]['ctag'])
+                        if list(set(pred_pos_list)) == ['VERB']:
+                            verb_only = True
+                        else:
+                            verb_only = False
                         pred = '_'.join(pred_tok_list)
                         ent1 = ent[pair[0]]['namedEntity']
                         ent2 = ent[pair[1]]['namedEntity']
-                        string = self.format_relation_string(ent[pair[0]], ent[pair[1]], pred)
-                        rels.append((ent1,ent2,pred,string))
+                        string = self.format_relation_string(ent[pair[0]], ent[pair[1]], pred, verb_only)
+                        rels.append((ent1,ent2,pred,string,verb_only))
                 except networkx.NetworkXNoPath:
                     print "no path found"
 #                print "-"
@@ -189,128 +178,129 @@ class BinaryRelation():
         return rels
 
 
-    def format_relation_string(self, ent1, ent2, pred):
+    def format_relation_string(self, ent1, ent2, pred, verb_only):
         s = '(' + pred + '.1,' + pred + '.2)'
         s += '#none' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
         s += '#none' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
         s += '::' + ent1['namedEntity']
         s += '::' + ent2['namedEntity']
+        s += '|||' + str(verb_only)
         return s
     
     
-    # Find the binary relations
-    def get_relations_old(self, dt, ent):
-        print dt
-        print('...ENTITY SPANS...')
-        # Identify entity spans (just get the heads)
-        ent_span_heads = {}
-        # Won't handle overlapping entities - not sure if we'd ever see these though
-        for entity in ent:
-            for x in range(ent[entity]['starttok'],ent[entity]['endtok']+1):
-                ent_span_heads[x] = entity
-        # Remove non-heads
-        l = ent_span_heads.keys()
-        for i in l:
-            if dt.nodes[i]['head'] in ent_span_heads:
-                del ent_span_heads[i]
-        print(ent_span_heads)
-        print('...TRAVERSAL...')
-        # Traverse the tree and extract information
-        res = self.traverse_parse_tree(dt, ent_span_heads, 0, [], {})
-        rel_deps = res[0]
-        preds = res[1]
-        print "REL DEPS:"
-        print(rel_deps)
-        print "PREDS:"
-        print(preds)
-        print "ENTITIES:"
-        print ent
-        # Build relations
-        r = []
-        for p in preds:
-            if p != 0:
-                p_string = dt.nodes[p]['word'] # Replace with lemma? if pred == None then it was the root??? 
-                for element in preds[p]['compound']:
-                    p_string += '_'+dt.nodes[element]['word'] # Change order and use lemma so that wuchs_auf -> aufwachsen?
-                if preds[p]['case']:
-                    case = dt.nodes[preds[p]['case']]['word']
-                    p_string += ':' + case
-                preds[p]['string'] = p_string
-        print(preds)
-        for rd in sorted(rel_deps, key=lambda tup: tup[0]):
-            if rd[1] != 0:
-                print "rd:", rd
-                entity_number = ent_span_heads[rd[0]]
-                entity_string = ent[entity_number]['namedEntity'].replace(' ','_')
-                pred = preds[rd[1]]['string']
-                print(entity_string, pred, rd[2])
-                r.append((entity_number, pred))
-        print "R"
-        print r
-        print('------')
-        formatted = self.format_relations(r, ent)
-        return formatted
+#    # Find the binary relations
+#    def get_relations_old(self, dt, ent):
+#        print dt
+#        print('...ENTITY SPANS...')
+#        # Identify entity spans (just get the heads)
+#        ent_span_heads = {}
+#        # Won't handle overlapping entities - not sure if we'd ever see these though
+#        for entity in ent:
+#            for x in range(ent[entity]['starttok'],ent[entity]['endtok']+1):
+#                ent_span_heads[x] = entity
+#        # Remove non-heads
+#        l = ent_span_heads.keys()
+#        for i in l:
+#            if dt.nodes[i]['head'] in ent_span_heads:
+#                del ent_span_heads[i]
+#        print(ent_span_heads)
+#        print('...TRAVERSAL...')
+#        # Traverse the tree and extract information
+#        res = self.traverse_parse_tree(dt, ent_span_heads, 0, [], {})
+#        rel_deps = res[0]
+#        preds = res[1]
+#        print "REL DEPS:"
+#        print(rel_deps)
+#        print "PREDS:"
+#        print(preds)
+#        print "ENTITIES:"
+#        print ent
+#        # Build relations
+#        r = []
+#        for p in preds:
+#            if p != 0:
+#                p_string = dt.nodes[p]['word'] # Replace with lemma? if pred == None then it was the root??? 
+#                for element in preds[p]['compound']:
+#                    p_string += '_'+dt.nodes[element]['word'] # Change order and use lemma so that wuchs_auf -> aufwachsen?
+#                if preds[p]['case']:
+#                    case = dt.nodes[preds[p]['case']]['word']
+#                    p_string += ':' + case
+#                preds[p]['string'] = p_string
+#        print(preds)
+#        for rd in sorted(rel_deps, key=lambda tup: tup[0]):
+#            if rd[1] != 0:
+#                print "rd:", rd
+#                entity_number = ent_span_heads[rd[0]]
+#                entity_string = ent[entity_number]['namedEntity'].replace(' ','_')
+#                pred = preds[rd[1]]['string']
+#                print(entity_string, pred, rd[2])
+#                r.append((entity_number, pred))
+#        print "R"
+#        print r
+#        print('------')
+#        formatted = self.format_relations(r, ent)
+#        return formatted
 
 
-    # Format the binary relations ready for printing
-    def format_relations_old(self, rels, ents):
-        result = []
-        d = {}
-        for r in rels:
-            if r[1] in d and r[0] not in d[r[1]]:
-                d[r[1]].append(r[0])
-            else:
-                d[r[1]] = [r[0]]
-        print "D"
-        print d
-        for pred in d:
-            if pred != 'none' and len(d[pred]) == 2: # Binary relation
-                # Sort the arguments of the predicates
-                args = []
-                for arg in d[pred]:
-                    args.append((arg,ents[arg]['starttok']))
-                l = [y[0] for y in sorted(args, key=lambda x: x[1])]
-                # Format the predicate string
-                p = pred.replace(':','.')
-                # Construct the relation string to match the format from the English pipeline
-                s = '('+p+'.1,'+p+'.2)'
-                s += '#none' if ents[l[0]]['FIGERType'] == 'none' else '#'+ents[l[0]]['FIGERType'].split('/')[1]
-                s += '#none' if ents[l[1]]['FIGERType'] == 'none' else '#'+ents[l[1]]['FIGERType'].split('/')[1]
-                s += '::'+ents[l[0]]['namedEntity']
-                s += '::'+ents[l[1]]['namedEntity']
-                result.append(s)
-        return result
+#    # Format the binary relations ready for printing
+#    def format_relations_old(self, rels, ents):
+#        result = []
+#        d = {}
+#        for r in rels:
+#            if r[1] in d and r[0] not in d[r[1]]:
+#                d[r[1]].append(r[0])
+#            else:
+#                d[r[1]] = [r[0]]
+#        print "D"
+#        print d
+#        for pred in d:
+#            if pred != 'none' and len(d[pred]) == 2: # Binary relation
+#                # Sort the arguments of the predicates
+#                args = []
+#                for arg in d[pred]:
+#                    args.append((arg,ents[arg]['starttok']))
+#                l = [y[0] for y in sorted(args, key=lambda x: x[1])]
+#                # Format the predicate string
+#                p = pred.replace(':','.')
+#                # Construct the relation string to match the format from the English pipeline
+#                s = '('+p+'.1,'+p+'.2)'
+#                s += '#none' if ents[l[0]]['FIGERType'] == 'none' else '#'+ents[l[0]]['FIGERType'].split('/')[1]
+#                s += '#none' if ents[l[1]]['FIGERType'] == 'none' else '#'+ents[l[1]]['FIGERType'].split('/')[1]
+#                s += '::'+ents[l[0]]['namedEntity']
+#                s += '::'+ents[l[1]]['namedEntity']
+#                result.append(s)
+#        return result
         
 
-    # Traverse the parse tree
-    def traverse_parse_tree(self, dt, e, node_index, rels, preds):
-        children = sorted(chain.from_iterable(dt.nodes[node_index]['deps'].values()))
-        for child_index in children:
-            child_node = dt.nodes[child_index]
-            res = self.get_rels_and_preds(rels, preds, e, child_index, child_node)
-            rels = res[0]
-            preds = res[1]
-            self.traverse_parse_tree(dt, e, child_index, rels, preds)
-        return (rels, preds)
+#    # Traverse the parse tree
+#    def traverse_parse_tree(self, dt, e, node_index, rels, preds):
+#        children = sorted(chain.from_iterable(dt.nodes[node_index]['deps'].values()))
+#        for child_index in children:
+#            child_node = dt.nodes[child_index]
+#            res = self.get_rels_and_preds(rels, preds, e, child_index, child_node)
+#            rels = res[0]
+#            preds = res[1]
+#            self.traverse_parse_tree(dt, e, child_index, rels, preds)
+#        return (rels, preds)
 
 
-    # Extract information on relations and predicates, to be used in constructing binary relations
-    def get_rels_and_preds(self, rels, preds, e, child_index, child_node):
-        # Get arcs pointing from the entity node (outgoing)
-        if child_index in e:
-            rels.append((child_index, child_node['head'], child_node['rel']))
-            # Maintain a dictionary of predicates to be used for recording compounds
-            if child_node['head'] not in preds:
-                preds[child_node['head']] = {'compound': [], 'case': None}
-        # Get arcs pointing from the node to the entity node (incoming)
-        elif child_node['head'] in e and child_node['rel'] == 'case': # Case only for now
-            head_chain = [item for item in rels if item[0] == child_node['head']]
-            if head_chain[0][1] in preds:
-                preds[head_chain[0][1]]['case'] = child_index
-        # Record (compound) particle verbs (serial verbs do not appear to apply to German)
-        elif child_node['head'] in preds and child_node['rel'] == 'compound:prt':
-            preds[child_node['head']]['compound'].append(child_index)
-        return(rels, preds)
+#    # Extract information on relations and predicates, to be used in constructing binary relations
+#    def get_rels_and_preds(self, rels, preds, e, child_index, child_node):
+#        # Get arcs pointing from the entity node (outgoing)
+#        if child_index in e:
+#            rels.append((child_index, child_node['head'], child_node['rel']))
+#            # Maintain a dictionary of predicates to be used for recording compounds
+#            if child_node['head'] not in preds:
+#                preds[child_node['head']] = {'compound': [], 'case': None}
+#        # Get arcs pointing from the node to the entity node (incoming)
+#        elif child_node['head'] in e and child_node['rel'] == 'case': # Case only for now
+#            head_chain = [item for item in rels if item[0] == child_node['head']]
+#            if head_chain[0][1] in preds:
+#                preds[head_chain[0][1]]['case'] = child_index
+#        # Record (compound) particle verbs (serial verbs do not appear to apply to German)
+#        elif child_node['head'] in preds and child_node['rel'] == 'compound:prt':
+#            preds[child_node['head']]['compound'].append(child_index)
+#        return(rels, preds)
 
 
     # Write the binary relations to file
