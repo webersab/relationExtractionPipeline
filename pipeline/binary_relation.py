@@ -37,68 +37,12 @@ class BinaryRelation():
             # Read entities
             filenamestem = df.split('/')[-1].split('.')[0]
             ef = entfilepath+'/'+filenamestem+'.json'
-            ne = hf.read_json(ef)
-            entities = self.calculate_token_spans_entities(dtree, ne)
+            entities = hf.read_json(ef)
+            #entities = self.calculate_token_spans_entities(dtree, ne)
             # Extract binary relations
             relations = self.extract(dtree, entities)
             # Write to file
             self.write_to_file(relations)
-
-
-#    # Merge entities already identitified by AGDISTIS with those from Spotlight output
-#    def merge_entities(self, spot, agdis):
-#        a = {}
-#        # Read AGDISTIS entities
-#        for sents in agdis['sentences']:
-#            for ent in agdis['sentences'][sents]['entities']:
-#                e = agdis['sentences'][sents]['entities'][ent]
-#                k = str(sents) + '_' + str(e['start']) + '_' + str(e['offset'])
-#                a[k] = e['namedEntity']
-#        # Merge in the Spotlight entities
-#        for sents in spot['sentences']:
-#            for ent in spot['sentences'][sents]['entities']:
-#                e = spot['sentences'][sents]['entities'][ent]
-#                k = str(sents) + '_'+ str(e['start']) + '_' + str(e['offset'])
-#                if k not in a: # New entity
-#                    if sents in agdis['sentences']:
-#                        last_ent_num = sorted(agdis['sentences'][sents]['entities'].keys())[-1]
-#                        ent_num = str(int(last_ent_num)+1)
-#                        agdis['sentences'][sents]['entities'][ent_num] = e
-#                    else:
-#                        agdis['sentences'][sents] = {'entities':{0:e}}
-#        return agdis
-    
-                        
-    # Convert character offset to token offset
-    def convert_offsets(self,sentence):
-        conv = {}
-        counter = 1
-        for x in range(0,len(sentence)):
-            conv[x] = counter
-            if sentence[x] == ' ':
-                counter += 1
-        return conv
-    
-
-    # Calculate the token spans from character offsets
-    def calculate_token_spans_entities(self, dt, ent):
-        # Find start and end tokens for entities from character start and offset
-        for sent in ent['sentences']:
-            dpsenttree = dt[int(sent)]
-            sentstring = self.get_sentence(dpsenttree)
-            char_to_tok = self.convert_offsets(sentstring)
-            for entity in ent['sentences'][sent]['entities']:
-                e = ent['sentences'][sent]['entities'][entity]
-                start = e['start']
-                offset = e['offset']
-                starttok = char_to_tok[start]
-                endtok = char_to_tok[start+offset-1]
-                ent['sentences'][sent]['entities'][entity]['starttok'] = starttok
-                ent['sentences'][sent]['entities'][entity]['endtok'] = endtok
-                if isinstance(e['namedEntity'], (int,long)):
-                    string_value = str(e['namedEntity'])
-                    ent['sentences'][sent]['entities'][entity]['namedEntity'] = string_value
-        return ent
 
 
     # Perform the extraction

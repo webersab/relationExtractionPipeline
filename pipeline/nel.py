@@ -53,53 +53,12 @@ class Nel():
                     f.write('\n')
             
 
-#    # Clean up after multi-word-spanning entities
-#    def clean_entity_sentence(self, s):
-#        s = s.replace('</nentity> <nentity>',' ')
-#        s = s.replace('</centity> <centity>',' ')
-#        s = s.replace('<nentity>','<entity>')
-#        s = s.replace('<centity>','<entity>')
-#        s = s.replace('</nentity>','</entity>')
-#        s = s.replace('</centity>','</entity>')
-#        s = s.rstrip(' ')
-#        return s
-
-
-#    # Add <entity></entity> tags around each NE
-#    def format_nel_sentences_old(self, nerfile, entfile):
-#        sentences = []
-#        sent = ''
-#        entity = False
-#        counter = 0
-#        with open(nerfile) as n, open(entfile) as e:
-#            for nline, eline in izip(n, e):
-#                if nline == '\n':
-#                    clean_sent = self.clean_entity_sentence(sent)
-#                    sentences.append((counter,int(entity),clean_sent))
-#                    sent = ''
-#                    entity = False
-#                    counter += 1
-#                else:
-#                    ntoks = nline.rstrip('\n').split('\t')
-#                    etoks = eline.rstrip('\n').split('\t')
-#                    if ntoks[1] == 'O' and etoks[1] == 'O': # Not an entity
-#                        sent += ntoks[0] + ' '
-#                    elif ntoks[1] != 'O': # Named entities take precedence
-#                        entity = True
-#                        sent += '<nentity>' + ntoks[0] + '</nentity> '
-#                    elif etoks != 'O':
-#                        entity = True
-#                        sent += '<centity>' + etoks[0] + '</centity> '
-#                    else:
-#                        pass
-#        return sentences
-
-
-    # Add <entity></entity> tags around each NE
+    # Add <entity></entity> tags around each entity
     def format_nel_sentences(self, nerfile, entfile):
         sentences = []
+        ent_map = {}
         ner_sents = self.get_entities_from_file(nerfile, 'ner')
-        ent_sents = self.get_entities_from_file(entfile, 'ent')
+        ent_sents = self.get_entities_from_file(entfile, 'com')
         for x in range(0,len(ner_sents)):
             entity = 0 if (ner_sents[x][1] == 0 and ent_sents[x][1] == 0) else 1
             ner_tagged = ner_sents[x][2]
@@ -109,10 +68,45 @@ class Nel():
             # Output a formatted sentence
             formatted_sent = self.add_entity_tags(tagged)
             sentences.append((x,entity,formatted_sent))
-            # Create 
-        return sentences
+            # Create a mapping so that NEs and common entities can be identified later
+            ent_map[x] = self.create_map_entities(tagged)
+        return (sentences, ent_map)
 
 
+    # Create a mapping for NEs and common entities
+    def create_map_entities(self, tagged):
+        m = {}
+        prev_tag = '0'
+        ent_list = []
+        entpresent = False
+        start = 0
+        for t in range(0,len(tagged)):
+            token = tagged[t][0]
+            tag = tagged[t][1]
+            if tag != prev_tag:
+                if entpresent:
+                    if tag != '0':
+                        ent_string = ' '.join(ent_list)
+                        m[start+1] = (ent_string, prev_tag)
+                        ent_list = [token]
+                        entpresent = True
+                        start = t
+                    else:
+                        ent_string = ' '.join(ent_list)
+                        m[start+1] = (ent_string, prev_tag)
+                        ent_list = []
+                        entpresent = False
+                else:
+                    ent_list = [token]
+                    entpresent = True
+                    start = t
+            elif tag == prev_tag and entpresent:
+                ent_list.append(token)
+            prev_tag = tag
+        return m
+    
+    
+    # Merge NEs and common entities, handling overlaps
     def merge_entities(self, ner_tagged, ent_tagged):
         overlaps = []
         # Detect overlaps: where the NER tool found a named entity and the parser found a noun
@@ -132,6 +126,7 @@ class Nel():
         return tagged
     
 
+    # Format the tagged sentences
     def add_entity_tags(self, tagged):
         formatted_sent = ''
         prev_tag = '0'
@@ -155,6 +150,7 @@ class Nel():
         return formatted_sent
     
 
+    # Read files in which entities are marked and extract tagged lists
     def get_entities_from_file(self, filename, label):
         sentences = []
         tagged_sent = []
@@ -192,6 +188,18 @@ class Nel():
         return m
 
     
+    # Convert character offset to token offset
+    def convert_offsets(self,sentence):
+        conv = {}
+        counter = 1
+        for x in range(0,len(sentence)):
+            if sentence[x] == ' ':
+                counter += 1
+            else:
+                conv[x] = counter
+        return conv
+
+
     # Named Entity linking using Agdistis
     def agdistis(self):
         nerindir = self.config.get('NER','out_dir')
@@ -207,15 +215,19 @@ class Nel():
             nf = nerfiles[x]
             ef = entfiles[x]
             # Read file and format sentences
-            formatted = self.format_nel_sentences(nf, ef)
+            temp = self.format_nel_sentences(nf, ef)
+            formatted = temp[0]
+            ent_map = temp[1]
             nel = {"file": nf.split('/')[-1], "sentences": {}}
+            counter = 0
             for sent in formatted:
                 if sent[1] == 1:
                     # Disambiguate using NEL
                     disambig = ag.disambiguate(sent[2])
                     # Map to Freebase, convert to dictionary 
-                    converted = self.map_and_convert_nel(sent[2], disambig, type_map)
+                    converted = self.map_and_convert_nel(sent[2], disambig, type_map, ent_map[counter])
                     nel["sentences"][sent[0]] = converted
+                counter += 1
             # Write to file
             outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1].split('.')[0] + '.json'
             with io.open(outfilename, 'w', encoding='utf8') as outfile:
@@ -223,69 +235,32 @@ class Nel():
                 outfile.write(unicode(data))
 
                 
-#    # Disambiguate entities using DBPedia Spotlight
-#    def dbpspotlight(self):
-#        # Get UDPipe-processed files
-#        indir = self.config.get('UDPipe','out_dir')
-#        outdir = self.config.get('Spotlight','out_dir')
-#        url = self.config.get('Spotlight','url')
-#        confidence = self.config.get('Spotlight','confidence')
-#        support = self.config.get('Spotlight','support')
-#        spot = DBPediaSpotlight(url)
-#        files = glob.glob(self.home+'/'+indir+'/*')
-#        # Get DBPedia to FIGER mapping
-#        type_map = self.get_dbpedia_to_figer_mapping()
-#        for f in files:
-#            nel = {"file": f, "sentences": {}}
-#            sentences = self.extract_sentences(f)
-#            for x in range(0,len(sentences)):
-#                sentstring = ' '.join(sentences[x])
-#                annotations = spot.disambiguate(sentstring, confidence=confidence, support=support)
-#                renamed = self.rename_spotlight_keys(annotations)
-#                converted = self.map_and_convert_nel(sentstring, renamed, type_map)
-#                nel["sentences"][x] = converted
-#            # Write to file
-#            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.json'
-#            with io.open(outfilename, 'w', encoding='utf8') as outfile:
-#                data = json.dumps(nel, ensure_ascii=False)
-#                outfile.write(unicode(data))
-
-
-#    # Rename keys from dbpedia spotlight to match those produced by Agdistis
-#    def rename_spotlight_keys(self, anns):
-#        renamed = []
-#        for a in anns:
-#            r = {}
-#            offset = 0
-#            for prop in a:
-#                if prop == 'URI':
-#                    r['disambiguatedURL'] = a[prop]
-#                elif prop == 'offset':
-#                    r['start'] = a[prop]
-#                elif prop == 'surfaceForm':
-#                    r['namedEntity'] = a[prop]
-#                    if isinstance(a[prop], (int,long)):
-#                        offset = len(str(a[prop]))
-#                    else:
-#                        offset = len(a[prop].encode('utf-8'))
-#                else:
-#                    r[prop] = a[prop]
-#            r['offset'] = offset
-#            renamed.append(r)
-#        return renamed
-        
-
     # Map the DBPedia urls to Freebase urls
-    def map_and_convert_nel(self, sent_str, nel_output, m):
+    def map_and_convert_nel(self, sent_str, nel_output, tm, em):
         conv_nel = {"sentenceStr": sent_str, "entities": {}}
+        clean_sent = sent_str.replace('<entity>','').replace('</entity>','')
+        char_to_tok = self.convert_offsets(clean_sent.decode('utf-8'))
         counter = 0
         for e in nel_output:
+            # Convert char to word indices
+            start = e['start']
+            offset = e['offset']
+            starttok = char_to_tok[start]
+            e["starttok"] = starttok
+            e["endtok"] = char_to_tok[start+offset-1]
+            # Map to FIGER
             dbpedia_url = e["disambiguatedURL"]
             figer_type = "none"
-            if dbpedia_url in m and m[dbpedia_url] != '':
-                figer_type = m[dbpedia_url]
+            if dbpedia_url in tm and tm[dbpedia_url] != '':
+                figer_type = tm[dbpedia_url]
             e["FIGERType"] = figer_type
-            conv = hf.convert_unicode_to_str(e)
-            conv_nel["entities"][counter] = conv
+            # Add indicator of common entity or named entity
+            e["entityType"] = em[starttok][1][0:3]
+            # Convert numbers to strings
+            if isinstance(e['namedEntity'], (int,long)):
+                string_value = str(e['namedEntity'])
+                e["namedEntity"] = string_value
+            #conv = hf.convert_unicode_to_str(e)
+            conv_nel["entities"][counter] = e
             counter += 1
         return conv_nel
