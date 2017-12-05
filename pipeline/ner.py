@@ -6,7 +6,7 @@ import io
 import gzip
 import sys
 import codecs
-import glob
+#import glob
 import csv
 import ConfigParser
 import logging
@@ -23,26 +23,27 @@ class Ner():
         self.home = self.config.get('General', 'home')
         
 
-    def NER(self):
+    def NER(self, files):
         print('process: NER')
         # Format file with one token per line (take tokenisation from UDPipe)
-        self.pre_process_ner()
+        self.pre_process_ner(files)
         # Apply NER using GermaNER
         # GermaNER(configmap)
         # Apply NER using Stanford NER
-        self.StanfordNER()
+        self.StanfordNER(files)
         
 
     # Read UDPipe files and output one token per line, save as a text file
-    def pre_process_ner(self):
+    def pre_process_ner(self, files):
         # Get output directory
         outdir = self.config.get('NER','pre_proc_out_dir')
         # Get UDPipe-processed files
         indir = self.config.get('UDPipe','out_dir')
-        files = glob.glob(self.home+'/'+indir+'/*')
+#        files = glob.glob(self.home+'/'+indir+'/*')
         for f in files:
-            sentences = self.extract_sentences(f)
-            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0] + '.tsv'
+            infile = indir + '/' + f
+            sentences = self.extract_sentences(infile)
+            outfilename = self.home + '/' + outdir + '/' + f#.split('/')[-1].split('.')[0]# + '.tsv'
             with open(outfilename, 'w') as outfile:
                 for sent in sentences:
                     for tok in sent:
@@ -77,7 +78,7 @@ class Ner():
     
                         
     # Perform NER using GermaNER
-    def GermaNER(self):
+    def GermaNER(self, files):
         # Get jar file path
         jar_file = self.config.get('GermaNER','jar_file')
         # Get input and output directories, and input files
@@ -91,21 +92,22 @@ class Ner():
 
 
     # Perform NER using Stanford NER
-    def StanfordNER(self):
+    def StanfordNER(self, files):
         # Get jar file path
         jar_file = self.config.get('StanfordNER','jar_file')
         model_file = self.config.get('StanfordNER','model_file')
         # Get input and output directories, and input files
         indir = self.config.get('NER','pre_proc_out_dir')
         outdir = self.config.get('NER','out_dir')
-        files = glob.glob(self.home+'/'+indir+'/*.tsv')
+#        files = glob.glob(self.home+'/'+indir+'/*.tsv')
         # Initialise NER tagger
         st = StanfordNERTagger(model_file, jar_file, encoding='utf-8')
         for f in files:
+            fpath = indir + '/' + f
             raw_sentences = []
             tagged_sentences = []
             # Read tokenised raw sentences
-            with open(f, 'r') as infile:
+            with open(fpath, 'r') as infile:
                 tokens = []
                 for line in infile:
                     if line == '\n':
@@ -118,7 +120,7 @@ class Ner():
                 tagged_sent = st.tag(sent)
                 tagged_sentences.append(tagged_sent)
             # Write tagged sentences to file
-            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1]
+            outfilename = self.home + '/' + outdir + '/' + f#.split('/')[-1]
             with codecs.open(outfilename, 'w', 'utf-8') as outfile:
                 for sent in tagged_sentences:
                     for tok in sent:

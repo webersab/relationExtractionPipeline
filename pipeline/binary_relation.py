@@ -5,7 +5,7 @@
 import io
 import sys
 import codecs
-import glob
+#import glob
 import csv
 import ConfigParser
 import logging
@@ -25,18 +25,19 @@ class BinaryRelation():
 
         
     # Extract binary relations by combining output of the dependency parser and entity linker
-    def extract_binary_relations(self):
+    def extract_binary_relations(self, files):
         print('process: Extract binary relations')
         common_entities = self.config.get('NEL','common_entities')
         entfilepath = self.config.get('Agdistis', 'out_dir')
         dpindir = self.config.get('UnstableParser','post_proc_out_dir')
-        dpfiles = glob.glob(self.home+'/'+dpindir+'/*')
-        for df in dpfiles:
+#        dpfiles = glob.glob(self.home+'/'+dpindir+'/*')
+        for f in files:
+            df = dpindir + '/' + f
             # Read dependency parse
             dtree = hf.dependency_parse_to_graph(df)
             # Read entities
-            filenamestem = df.split('/')[-1].split('.')[0]
-            ef = entfilepath+'/'+filenamestem+'.json'
+            filenamestem = df.split('/')[-1]#.split('.')[0]
+            ef = entfilepath+'/'+filenamestem#+'.json'
             entities = hf.read_json(ef)
             #entities = self.calculate_token_spans_entities(dtree, ne)
             # Extract binary relations

@@ -6,7 +6,7 @@ import io
 import gzip
 import sys
 import codecs
-import glob
+#import glob
 import csv
 import ConfigParser
 import logging
@@ -28,24 +28,25 @@ class Nel():
         self.home = self.config.get('General', 'home')
         
 
-    def NEL(self):
+    def NEL(self, files):
         print('NER and parsing complete\nNamed Entity Linking')
         # Extract nouns
-        self.detect_nouns()
+        self.detect_nouns(files)
         # Apply NEL using Agdistis
-        self.agdistis()
+        self.agdistis(files)
         
 
     # Extract noun spans
-    def detect_nouns(self):
+    def detect_nouns(self, files):
         # Get input and output directories, and input files
         indir = self.config.get('UnstableParser','post_proc_out_dir')
         outdir = self.config.get('Entities','out_dir')
-        files = glob.glob(self.home+'/'+indir+'/*.conllu')
+#        files = glob.glob(self.home+'/'+indir+'/*.conllu')
         for f in files:
-            dtrees = hf.dependency_parse_to_graph(f)
+            infile = indir + '/' + f
+            dtrees = hf.dependency_parse_to_graph(infile)
             tagged_sents = hf.extract_entities_from_dependency_parse(dtrees, 'NOUN')
-            outfilename = self.home + '/' + outdir + '/' + f.split('/')[-1].split('.')[0]+'.tsv'
+            outfilename = self.home + '/' + outdir + '/' + f#.split('/')[-1].split('.')[0]+'.tsv'
             with open(outfilename, 'w') as f:
                 for sent in tagged_sents:
                     for token in sent:
@@ -201,13 +202,15 @@ class Nel():
 
 
     # Named Entity linking using Agdistis
-    def agdistis(self):
+    def agdistis(self, files):
         nerindir = self.config.get('NER','out_dir')
         entindir = self.config.get('Entities','out_dir')
         outdir = self.config.get('Agdistis','out_dir')
         url = self.config.get('Agdistis','url')
-        nerfiles = sorted(glob.glob(self.home+'/'+nerindir+'/*.tsv'))
-        entfiles = sorted(glob.glob(self.home+'/'+entindir+'/*.tsv'))
+        nerfiles = sorted([self.home+'/'+nerindir+'/'+f for f in files])
+        entfiles = sorted([self.home+'/'+entindir+'/'+f for f in files])
+#        nerfiles = sorted(glob.glob(self.home+'/'+nerindir+'/*.tsv'))
+#        entfiles = sorted(glob.glob(self.home+'/'+entindir+'/*.tsv'))
         ag = Agdistis(url)
         # Get DBPedia to FIGER mapping
         type_map = self.get_dbpedia_to_figer_mapping()
@@ -229,7 +232,7 @@ class Nel():
                     nel["sentences"][sent[0]] = converted
                 counter += 1
             # Write to file
-            outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1].split('.')[0] + '.json'
+            outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]#.split('.')[0] + '.json'
             with io.open(outfilename, 'w', encoding='utf8') as outfile:
                 data = json.dumps(nel, ensure_ascii=False)
                 outfile.write(unicode(data))
