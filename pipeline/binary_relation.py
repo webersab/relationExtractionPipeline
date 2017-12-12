@@ -5,7 +5,6 @@
 import io
 import sys
 import codecs
-#import glob
 import csv
 import ConfigParser
 import logging
@@ -110,10 +109,12 @@ class BinaryRelation():
                         temp = self.get_predicate(dt, ent1start, ent1end, shortest_path)
                         pred = temp[0]
                         verb_only = temp[1]
+                        negation = temp[2]
                         ent1 = ent[pair[0]]['namedEntity']
                         ent2 = ent[pair[1]]['namedEntity']
                         if verb_only:
-                            string = self.format_relation_string(ent[pair[0]], ent[pair[1]], pred, verb_only)
+                            string = self.format_relation_string(ent[pair[0]], ent[pair[1]], pred, verb_only, negation)
+                            print string
                             rels.append((ent1,ent2,pred,string,verb_only))
                 except networkx.NetworkXNoPath:
                     print "no path found"
@@ -123,8 +124,9 @@ class BinaryRelation():
 
 
     def get_predicate(self, dt, ent1start, ent1end, shortest_path):
-        x = (ent1end-ent1start) + 1
-        path_list = shortest_path[x:-1]
+        #x = (ent1end-ent1start) + 1
+        path_list = shortest_path[1:-1]
+        print "path list", path_list
         pred_tok_list = []
         pred_pos_list = []
         # Traverse the nodes in the path and build a list of predicates
@@ -149,6 +151,13 @@ class BinaryRelation():
             print n
             case = dt.nodes[n]['lemma']
             pred_tok_list.append(case)
+        # Check for negations amongst the advmod relations attached to the predicate 
+        negation = False
+        for pred_tok in path_list:
+            if dt.nodes[pred_tok]['ctag'] == 'VERB' and 'advmod' in dt.nodes[pred_tok]['deps']:
+                for advmod_tok in dt.nodes[pred_tok]['deps']['advmod']:
+                    if dt.nodes[advmod_tok]['tag'] == 'PTKNEG':
+                        negation = True
         # Construct the predicate string
         pred = '.'.join(pred_tok_list)
         # Does the path contain verbs only?
@@ -156,11 +165,15 @@ class BinaryRelation():
             verb_only = True
         else:
             verb_only = False
-        return (pred, verb_only)
+        print verb_only
+        return (pred, verb_only, negation)
         
 
-    def format_relation_string(self, ent1, ent2, pred, verb_only):
-        s = '(' + pred + '.1,' + pred + '.2)'
+    def format_relation_string(self, ent1, ent2, pred, verb_only, neg):
+        s = ''
+        if neg:
+            s += '__NEG'
+        s += '(' + pred + '.1,' + pred + '.2)'
         s += '#none' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
         s += '#none' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
         s += '::' + ent1['namedEntity']
