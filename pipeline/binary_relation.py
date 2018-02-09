@@ -27,6 +27,7 @@ class BinaryRelation():
         
     # Extract binary relations by combining output of the dependency parser and entity linker
     def extract_binary_relations(self, files):
+        dicttypes = {}
         print('process: Extract binary relations')
         common_entities = self.config.get('NEL','common_entities')
         entfilepath = self.config.get('Agdistis', 'out_dir')
@@ -41,14 +42,35 @@ class BinaryRelation():
             entities = hf.read_json(ef)
             #entities = self.calculate_token_spans_entities(dtree, ne)
             # Extract binary relations
-            res = self.extract(dtree, entities)
+            res = self.extract(dtree, entities, f)
             relations = res[0]
             jsonlist = res[1]
+            dicttypes = self.update_dict_types(dicttypes, res[2])
             # Write to human readable file
             self.write_to_human_readable_file(relations)
             # Write to json format file
             self.output_to_json(jsonlist)
-            
+        # Write type list to file
+        self.output_type_list(dicttypes)
+
+
+    # Write list of types to file:
+    def output_type_list(self, d):
+        outdir = self.config.get('Output', 'out_dir')
+        filename = self.config.get('Output','types_list')
+        listtypes = d.keys()
+        with open(outdir + '/' + filename, 'w') as f:
+            for t in listtypes:
+                f.write(t + '\n')
+
+
+    # Maintain a dictionary of types
+    def update_dict_types(self, d, types):
+        for t in types:
+            if not t in d:
+                d[t] = 1
+        return d
+        
 
     # Output sentence relations to json
     def output_to_json(self, l):
@@ -62,27 +84,37 @@ class BinaryRelation():
     # Format relations for JSON file
     def format_json_relations(self, rels):
         listr = []
+        listt = []
         for r in rels:
             print "----"
             print r
             ent1type = 'E' if r[0]['entityType'] == 'ner' else 'G'
             ent2type = 'E' if r[1]['entityType'] == 'ner' else 'G'
+            ent1string = r[0]['namedEntity'].replace(' ', '_')
+            ent2string = r[1]['namedEntity'].replace(' ', '_')
+            ent1figer = '#thing' if r[0]['FIGERType'] == 'none' else '#'+r[0]['FIGERType'].split('/')[1]
+            ent2figer = '#thing' if r[1]['FIGERType'] == 'none' else '#'+r[1]['FIGERType'].split('/')[1]
             s = '('
             if r[3]: # negation
                 s += 'NEG__'
             s += '(' + r[2].split('.')[0] + '.1,' + r[2] + '.2)' # predicate
-            s += '::' + r[0]['namedEntity'] + '::' + r[1]['namedEntity'] # ent1, ent2 strings
-            s += '::' + ent1type + ent2type # ent1, ent2 types
-            s += '::0::0' # dummy information
+            s += '::' + ent1string + '::' + ent2string # ent1, ent2 strings
+            s += '::' + ent1figer + '::' + ent2figer # ent1, ent2 FIGER types
+            s += '::' + ent1type + ent2type # ent1, ent2 types: named entities (E) or common nouns (G)
+            s += '::0' # dummy information - always sentence 0 (line internal sentence number)
+            s += '::' + str(r[7]) # event id (index of predicate main verb)
             s += ')'
-            listr.append({'r': s})                                                     
-        return listr
+            listr.append({'r': s})
+            listt.append(ent1figer)
+            listt.append(ent2figer)
+        return (listr, listt)
             
             
     # Perform the extraction
-    def extract(self, dt, ent):
+    def extract(self, dt, ent, f):
         rels = {}
         listsentrels = []
+        listtypes = []
         sentlist = ent['sentences'].keys()
         sentlist.sort()
         for sent in sentlist:
@@ -94,15 +126,17 @@ class BinaryRelation():
             # Get relations
             r = self.get_relations(dpsenttree, entities)
             # JSON format information
+            res = self.format_json_relations(r)
             dictsentrels['s'] = sentstring
-            dictsentrels['date'] = 'Feb 5, 2018 12:00:00 AM'
-            dictsentrels['articleId'] = '0'
+            dictsentrels['date'] = 'Jan 1, 1980 12:00:00 AM'
+            dictsentrels['articleId'] = f
             dictsentrels['lineId'] = str(sent)
-            dictsentrels['rels'] = self.format_json_relations(r)
+            dictsentrels['rels'] = res[0]
+            listtypes += res[1]
             listsentrels.append(dictsentrels)
             rels[sent] = {'sentence': sentstring, 'relations': r}
 #        print(rels)
-        return (rels, listsentrels)
+        return (rels, listsentrels, listtypes)
 
 
     # Extract the sentence text from the dependency tree
@@ -145,12 +179,13 @@ class BinaryRelation():
                         negation = temp[2]
                         passive = temp[3]
                         tensed_verb_only = temp[4]
+                        main_verb_index = temp[5]
                         ent1 = ent[pair[0]]#['namedEntity']
                         ent2 = ent[pair[1]]#['namedEntity']
                         if verb_only and tensed_verb_only: ### Amend check for only one tensed verb between entities (in path)
                             string = self.format_relation_string(ent[pair[0]], ent[pair[1]], pred, verb_only, negation, passive, tensed_verb_only)
                             print string
-                            rels.append((ent1,ent2,pred,negation,string,verb_only,tensed_verb_only))
+                            rels.append((ent1,ent2,pred,negation,string,verb_only,tensed_verb_only,main_verb_index))
                 except networkx.NetworkXNoPath:
                     print "no path found"
 #                print "-"
@@ -164,7 +199,10 @@ class BinaryRelation():
         pred_coarse_pos_list = []
         pred_fine_pos_list = []
         # Traverse the nodes in the path and build a list of predicates
+        main_verb_index = 0
         for p in path_list:
+            if main_verb_index == 0:
+                main_verb_index = p-1
             pred_coarse_pos_list.append(dt.nodes[p]['ctag'])
             pred_fine_pos_list.append(dt.nodes[p]['tag'])
             # Make a note of particle verbs
@@ -211,7 +249,7 @@ class BinaryRelation():
                     counter += 1
         if counter == 1:
             tensed_verb_only = True
-        return (pred, verb_only, negation, passive, tensed_verb_only)
+        return (pred, verb_only, negation, passive, tensed_verb_only, main_verb_index)
         
 
     def format_relation_string(self, ent1, ent2, pred, verb_only, neg, passive, tensed_verb_only):
@@ -219,8 +257,8 @@ class BinaryRelation():
         if neg:
             s += 'NEG__'
         s += '(' + pred.split('.')[0] + '.1,' + pred + '.2)'
-        s += '#none' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
-        s += '#none' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
+        s += '#thing' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
+        s += '#thing' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
         s += '::' + ent1['namedEntity']
         s += '::' + ent2['namedEntity']
 #        s += '|||' + '(verb only: '+ str(verb_only)
