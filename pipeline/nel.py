@@ -104,6 +104,9 @@ class Nel():
             elif tag == prev_tag and entpresent:
                 ent_list.append(token)
             prev_tag = tag
+        if entpresent:
+            ent_string = ' '.join(ent_list)
+            m[start+1] = (ent_string, prev_tag)
         return m
     
     
@@ -147,6 +150,8 @@ class Nel():
             elif tagged[t][1] == prev_tag or tagged[t][1] == '0':
                 formatted_sent += tagged[t][0] + ' '
             prev_tag = tagged[t][1]
+        if entpresent: # Final token is the entity
+            formatted_sent += '</entity>'
         formatted_sent = formatted_sent.replace(' </e', '</e').rstrip()
         return formatted_sent
     

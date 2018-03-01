@@ -23,7 +23,8 @@ class Preprocessor():
         
     # Split sentences using NLTKs PunktTokenizer
     def split_sentences(self, files):
-        indir = self.config.get('Input','data')
+        file_list = []
+        indir = self.config.get('Input','raw_input')
         outdir = self.config.get('Preprocessor','out_dir')
         model = self.config.get('Preprocessor','seg_model')
         splitter = nltk.data.load(model)
@@ -35,11 +36,14 @@ class Preprocessor():
                 text = ''.join(i.readlines())
             # Sentence split text
             segs = splitter.tokenize(text.decode('utf-8'))
+            if len(segs) >= 10:
+                file_list.append(f)
 #            outfilename = infile.split('/')[-1]
             outfile = self.home+'/'+outdir+'/'+f#outfilename
             with codecs.open(outfile, 'w', 'utf-8') as o:
                 for seg in segs:
                     o.write(seg+'\n')
+        return file_list
                     
             
     # UDPipe pre-processing

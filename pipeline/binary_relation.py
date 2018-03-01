@@ -86,24 +86,22 @@ class BinaryRelation():
         listr = []
         listt = []
         for r in rels:
-            print "----"
-            print r
             ent1type = 'E' if r[0]['entityType'] == 'ner' else 'G'
             ent2type = 'E' if r[1]['entityType'] == 'ner' else 'G'
-            ent1string = r[0]['namedEntity'].replace(' ', '_')
-            ent2string = r[1]['namedEntity'].replace(' ', '_')
+            if 'notInWiki' in r[0]['disambiguatedURL']:
+                ent1string = r[0]['namedEntity'].replace(' ', '_')
+            else:
+                ent1string = r[0]['disambiguatedURL'].split('/')[-1]
+            if 'notInWiki' in r[1]['disambiguatedURL']:
+                ent2string = r[1]['namedEntity'].replace(' ', '_')
+            else:
+                ent2string = r[1]['disambiguatedURL'].split('/')[-1]
             ent1figer = '#thing' if r[0]['FIGERType'] == 'none' else '#'+r[0]['FIGERType'].split('/')[1]
             ent2figer = '#thing' if r[1]['FIGERType'] == 'none' else '#'+r[1]['FIGERType'].split('/')[1]
-            s = '('
-            if r[3]: # negation
-                s += 'NEG__'
-            s += '(' + r[2].split('.')[0] + '.1,' + r[2] + '.2)' # predicate
-            s += '::' + ent1string + '::' + ent2string # ent1, ent2 strings
-            s += '::' + ent1figer + '::' + ent2figer # ent1, ent2 FIGER types
-            s += '::' + ent1type + ent2type # ent1, ent2 types: named entities (E) or common nouns (G)
-            s += '::0' # dummy information - always sentence 0 (line internal sentence number)
-            s += '::' + str(r[7]) # event id (index of predicate main verb)
-            s += ')'
+            neg = 'NEG__' if r[3] else ''
+            predicate = r[2].split('.')[0] + '.1,' + r[2] + '.2'
+            s = u'({}({})::{}::{}::{}::{}::{}{}::{}::{})'.format(neg, predicate, ent1string, ent2string,
+                                                          ent1figer, ent2figer, ent1type, ent2type, '0', str(r[7]))
             listr.append({'r': s})
             listt.append(ent1figer)
             listt.append(ent2figer)
@@ -253,17 +251,21 @@ class BinaryRelation():
         
 
     def format_relation_string(self, ent1, ent2, pred, verb_only, neg, passive, tensed_verb_only):
-        s = ''
-        if neg:
-            s += 'NEG__'
-        s += '(' + pred.split('.')[0] + '.1,' + pred + '.2)'
-        s += '#thing' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
-        s += '#thing' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
-        s += '::' + ent1['namedEntity']
-        s += '::' + ent2['namedEntity']
-#        s += '|||' + '(verb only: '+ str(verb_only)
-#        s += '; passive: ' + str(passive)
-#        s += '; tensed verb only: ' + str(tensed_verb_only) + ')' 
+        if 'notInWiki' in ent1['disambiguatedURL']:
+            ent1string = ent1['namedEntity'].replace(' ', '_')
+        else:
+            ent1string = ent1['disambiguatedURL'].split('/')[-1]
+        if 'notInWiki' in ent2['disambiguatedURL']:
+            ent2string = ent2['namedEntity'].replace(' ', '_')
+        else:
+            ent2string = ent2['disambiguatedURL'].split('/')[-1]
+        ent1figer = '#thing' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
+        ent2figer = '#thing' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
+        negation = 'NEG__' if neg else ''
+        predicate = pred.split('.')[0] + '.1,' + pred + '.2'
+        s = u'{}({}){}{}::{}::{}|||(verb only: {}; passive: {}; tensed verb only: {})'.format(negation, predicate, ent1figer, ent2figer,
+                                                                                               ent1string, ent2string, str(verb_only),
+                                                                                               str(passive), str(tensed_verb_only))
         return s
 
 

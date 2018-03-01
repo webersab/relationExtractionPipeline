@@ -12,8 +12,11 @@ import ConfigParser
 import logging
 import subprocess
 import simplejson as json
+import sner
 from nltk.tag import StanfordNERTagger
+from nltk.internals import config_java
 from itertools import izip
+from datetime import datetime
 
 
 class Ner():
@@ -21,8 +24,9 @@ class Ner():
     def __init__(self, config):
         self.config = config
         self.home = self.config.get('General', 'home')
-        
+        config_java(options='-xmx2G')
 
+        
     def NER(self, files):
         print('process: NER')
         # Format file with one token per line (take tokenisation from UDPipe)
@@ -93,6 +97,9 @@ class Ner():
 
     # Perform NER using Stanford NER
     def StanfordNER(self, files):
+        # Get NER server hostname
+        ner_host = self.config.get('StanfordNER','host_name')
+        print ner_host
         # Get jar file path
         jar_file = self.config.get('StanfordNER','jar_file')
         model_file = self.config.get('StanfordNER','model_file')
@@ -101,7 +108,8 @@ class Ner():
         outdir = self.config.get('NER','out_dir')
 #        files = glob.glob(self.home+'/'+indir+'/*.tsv')
         # Initialise NER tagger
-        st = StanfordNERTagger(model_file, jar_file, encoding='utf-8')
+###        st = StanfordNERTagger(model_file, jar_file, encoding='utf-8')
+        st = sner.Ner(host='scribe.inf.ed.ac.uk',port=9199)
         for f in files:
             fpath = indir + '/' + f
             raw_sentences = []
@@ -116,9 +124,13 @@ class Ner():
                     else:
                         tokens.append(line.rstrip('\n'))
             # Tag sentences
+            print 'start:', datetime.now()
             for sent in raw_sentences:
-                tagged_sent = st.tag(sent)
+                s = ' '.join(sent)
+                tagged_sent = st.tag(s.decode('utf8'))
                 tagged_sentences.append(tagged_sent)
+###            tagged_sentences = st.tag_sents(raw_sentences)
+            print 'end:', datetime.now()
             # Write tagged sentences to file
             outfilename = self.home + '/' + outdir + '/' + f#.split('/')[-1]
             with codecs.open(outfilename, 'w', 'utf-8') as outfile:
