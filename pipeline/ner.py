@@ -124,17 +124,15 @@ class Ner():
                     else:
                         tokens.append(line.rstrip('\n'))
             # Tag sentences
-            print 'start:', datetime.now()
             for sent in raw_sentences:
                 s = ' '.join(sent)
                 tagged_sent = st.tag(s.decode('utf8'))
                 tagged_sentences.append(tagged_sent)
 ###            tagged_sentences = st.tag_sents(raw_sentences)
-            print 'end:', datetime.now()
             # Write tagged sentences to file
             outfilename = self.home + '/' + outdir + '/' + f#.split('/')[-1]
             with codecs.open(outfilename, 'w', 'utf-8') as outfile:
                 for sent in tagged_sentences:
                     for tok in sent:
-                        outfile.write(tok[0]+'\t'+tok[1]+'\n')
+                        outfile.write(tok[0].lstrip('\n')+'\t'+tok[1]+'\n')
                     outfile.write('\n')

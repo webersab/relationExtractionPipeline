@@ -214,11 +214,11 @@ class BinaryRelation():
                 pred_tok_list.append(main_verb+'_'+particle_verb)
             else:
                 pred_tok_list.append(dt.nodes[p]['lemma'])
-        # Get preposition ("case" relation attached to second entity)
-        if 'case' in dt.nodes[shortest_path[-1]]['deps']:
-            n = dt.nodes[shortest_path[-1]]['deps']['case'][0]
-            case = dt.nodes[n]['lemma']
-            pred_tok_list.append(case)
+#        # Get preposition ("case" relation attached to second entity)
+#        if 'case' in dt.nodes[shortest_path[-1]]['deps']:
+#            n = dt.nodes[shortest_path[-1]]['deps']['case'][0]
+#            case = dt.nodes[n]['lemma']
+#            pred_tok_list.append(case)
         # Check for negations amongst the advmod relations attached to the predicate 
         negation = False
         for pred_tok in path_list:
