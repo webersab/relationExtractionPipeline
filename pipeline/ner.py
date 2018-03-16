@@ -99,7 +99,6 @@ class Ner():
     def StanfordNER(self, files):
         # Get NER server hostname
         ner_host = self.config.get('StanfordNER','host_name')
-        print ner_host
         # Get jar file path
         jar_file = self.config.get('StanfordNER','jar_file')
         model_file = self.config.get('StanfordNER','model_file')

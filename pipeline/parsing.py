@@ -41,7 +41,6 @@ class Parser():
         outdir = self.config.get('UnstableParser','out_dir')
 #        files = glob.glob(self.home+'/'+indir+'/*')
         file_list = [self.home+'/'+indir+'/'+f for f in files]
-        print file_list
         # Initialise parser
         logging.info('Initialising the UnstableParser:')
         parser = up.UnstableParser(parserpath, savedir)
