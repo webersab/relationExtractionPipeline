@@ -146,14 +146,26 @@ class BinaryRelation():
                 t.append(word)
         s = ' '.join(t)
         return s
-    
 
+
+    def get_negation(self, dt, i, neg):
+        if 'advmod' in dt.nodes[i]['deps']:
+            # Check for negations at sub-level
+            l = dt.nodes[i]['deps']['advmod']
+            for n in l:
+                if dt.nodes[n]['tag'] == 'PTKNEG':
+                    neg = True
+            for n in l:
+                neg = self.get_negation(dt, n, neg)
+        return neg
+
+    
     # Identify the binary relations
     def get_relations(self, dt, ent):
         rels = []
         ent_list = ent.keys()
-        for e in ent_list:
-            print ent[e]['namedEntity'], ent[e]['entityType']
+#        for e in ent_list:
+#            print ent[e]['namedEntity'], ent[e]['entityType']
         # For every pair of entities:
         for pair in product(ent_list, repeat=2):
             ent1 = ent[pair[0]]
@@ -169,7 +181,7 @@ class BinaryRelation():
                 pred = self.get_predicate(dt, ent1, ent2)
                 pred_string = pred[0]
                 pred_index = pred[1]
-                negation = False
+                negation = self.get_negation(dt, pred_index, False)
                 passive = False
                 string = self.format_relation_string(ent1,ent2,pred_string,negation,passive)
                 rels.append((ent1,ent2,pred_string,negation,string,pred_index))
@@ -179,86 +191,28 @@ class BinaryRelation():
     def get_predicate(self, dt, ent1, ent2):
         pred_string = ''
         pred_index = -1
-#        temp = [u'Grünen', u'Zustimmung']
-        temp = [u'DFB-Präsident', u'Weggefährten']
+        temp = [u'Künast', u'Job']
         if ent1['namedEntity'] in temp and ent2['namedEntity'] in temp:
-#            print dt
-#            print ent1
-#            print ent2
-            ent1rel = dt.nodes[ent1['starttok']]['rel']
-            ent2rel = dt.nodes[ent2['starttok']]['rel']
-            if ent1rel == 'nsubj' and ent2rel in ['obj', 'obl']:
-                ent1head = dt.nodes[ent1['starttok']]['head']
-                ent2head = dt.nodes[ent2['starttok']]['head']
-                if ent1head == ent2head:
-                    pred_string = dt.nodes[ent1head]['lemma']
-                    pred_index = ent1head
-                    # Check if predicate is a particle verb
-                    if 'compound:prt' in dt.nodes[ent1head]['deps']:
-                        for prt in dt.nodes[ent1head]['deps']['compound:prt']:
-                            pred_string += '_' + dt.nodes[prt]['lemma']
-#            print 'pred: ' + pred_string
-#            print '------'
+            print dt
+            print ent1
+            print ent2
+        ent1rel = dt.nodes[ent1['starttok']]['rel']
+        ent2rel = dt.nodes[ent2['starttok']]['rel']
+        if ent1rel == 'nsubj' and ent2rel in ['obj', 'obl']:
+            ent1head = dt.nodes[ent1['starttok']]['head']
+            ent2head = dt.nodes[ent2['starttok']]['head']
+            print ent1head, ent2head
+            if ent1head == ent2head:
+                pred_string = dt.nodes[ent1head]['lemma']
+                pred_index = ent1head
+                # Check if predicate is a particle verb
+                if 'compound:prt' in dt.nodes[ent1head]['deps']:
+                    for prt in dt.nodes[ent1head]['deps']['compound:prt']:
+                        pred_string += '_' + dt.nodes[prt]['lemma']
+            print 'pred: ' + pred_string
+            print '------'
         return (pred_string, pred_index)
 
-#    def get_predicate(self, dt, ent1start, ent1end, shortest_path):
-#        path_list = shortest_path[1:-1]
-#        pred_tok_list = []
-#        pred_coarse_pos_list = []
-#        pred_fine_pos_list = []
-#        # Traverse the nodes in the path and build a list of predicates
-#        main_verb_index = 0
-#        for p in path_list:
-#            if main_verb_index == 0:
-#                main_verb_index = p-1
-#            pred_coarse_pos_list.append(dt.nodes[p]['ctag'])
-#            pred_fine_pos_list.append(dt.nodes[p]['tag'])
-#            # Make a note of particle verbs
-#            if dt.nodes[p]['ctag'] == 'VERB' and 'compound:prt' in dt.nodes[p]['deps']:
-#                particle_verb_node_list = dt.nodes[p]['deps']['compound:prt']
-#                particle_verb_list = []
-#                for pv in particle_verb_node_list:
-#                    particle_verb_list.append(dt.nodes[pv]['lemma'])
-#                particle_verb = '_'.join(particle_verb_list)
-#                main_verb = dt.nodes[p]['lemma']
-#                pred_tok_list.append(main_verb+'_'+particle_verb)
-#            else:
-#                pred_tok_list.append(dt.nodes[p]['lemma'])
-#        # Get preposition ("case" relation attached to second entity)
-#        if 'case' in dt.nodes[shortest_path[-1]]['deps']:
-#            n = dt.nodes[shortest_path[-1]]['deps']['case'][0]
-#            case = dt.nodes[n]['lemma']
-#            pred_tok_list.append(case)
-#        # Check for negations amongst the advmod relations attached to the predicate 
-#        negation = False
-#        for pred_tok in path_list:
-#            if dt.nodes[pred_tok]['ctag'] == 'VERB' and 'advmod' in dt.nodes[pred_tok]['deps']:
-#                for advmod_tok in dt.nodes[pred_tok]['deps']['advmod']:
-#                    if dt.nodes[advmod_tok]['tag'] == 'PTKNEG':
-#                        negation = True
-#        # Check for passives
-#        passive = False
-#        for pred_tok in path_list:
-#            if 'aux:pass' in dt.nodes[pred_tok]['deps']:
-#                passive = True
-#        # Construct the predicate string
-#        pred = '.'.join(pred_tok_list)
-#        # Does the path contain verbs only?
-#        verb_only = True if list(set(pred_coarse_pos_list)) == ['VERB'] else False ### Amend to check for tensed verbs only
-#        # Does the path contain only one tensed verb?
-#        tensed_verb_only = False
-#        counter = 0
-#        for pos_tag in pred_fine_pos_list:
-#            if pos_tag in ['VVFIN', 'VVIMP', 'VVPP']:
-#                counter += 1
-#        if counter == 0: # Check for auxiliary verbs
-#            for pos_tag in pred_fine_pos_list:
-#                if pos_tag in ['VAFIN', 'VAIMP', 'VAPP']:
-#                    counter += 1
-#        if counter == 1:
-#            tensed_verb_only = True
-#        return (pred, verb_only, negation, passive, tensed_verb_only, main_verb_index)
-        
 
     def format_relation_string(self, ent1, ent2, pred, neg, passive):
         if 'notInWiki' in ent1['disambiguatedURL']:
