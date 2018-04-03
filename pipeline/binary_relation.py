@@ -159,13 +159,21 @@ class BinaryRelation():
                 neg = self.get_negation(dt, n, neg)
         return neg
 
+
+    def get_modifiers_to_verb(self, dt, i, mods):
+        if 'advmod' in dt.nodes[i]['deps']:
+            l = dt.nodes[i]['deps']['advmod']
+            for n in l:
+                if dt.nodes[n]['tag'] != 'PTKNEG':
+                    mods.append(n)
+                    mods = self.get_modifiers_to_verb(dt, n, mods)
+        return mods
+
     
     # Identify the binary relations
     def get_relations(self, dt, ent):
         rels = []
         ent_list = ent.keys()
-#        for e in ent_list:
-#            print ent[e]['namedEntity'], ent[e]['entityType']
         # For every pair of entities:
         for pair in product(ent_list, repeat=2):
             ent1 = ent[pair[0]]
@@ -174,34 +182,38 @@ class BinaryRelation():
                 valid_combination = False
             else:
                 valid_combination = True
-#            ent1start = ent1['starttok']
-#            ent2start = ent2['starttok']
-#            if pair[0] != pair[1] and ent1start < ent2start and valid_combination:
             if pair[0] != pair[1] and valid_combination:
                 pred = self.get_predicate(dt, ent1, ent2)
                 pred_string = pred[0]
                 pred_index = pred[1]
                 negation = self.get_negation(dt, pred_index, False)
-                passive = False
+                passive = pred[2]
+                if passive: # Swap entities
+                    ent1 = ent[pair[1]]
+                    ent2 = ent[pair[0]]
                 string = self.format_relation_string(ent1,ent2,pred_string,negation,passive)
-                rels.append((ent1,ent2,pred_string,negation,string,pred_index))
+                if pred_string != '':
+                    rels.append((ent1,ent2,pred_string,negation,string,pred_index))
         return rels
 
 
     def get_predicate(self, dt, ent1, ent2):
         pred_string = ''
         pred_index = -1
-        temp = [u'Künast', u'Job']
+        passive = False
+        temp = [u'Katrin Göring-Eckardt', u'Nacht']
         if ent1['namedEntity'] in temp and ent2['namedEntity'] in temp:
             print dt
             print ent1
             print ent2
         ent1rel = dt.nodes[ent1['starttok']]['rel']
         ent2rel = dt.nodes[ent2['starttok']]['rel']
-        if ent1rel == 'nsubj' and ent2rel in ['obj', 'obl']:
+        if ent1rel in ['nsubj', 'nsubj:pass'] and ent2rel in ['obj', 'obl']:
+            if ent1rel == 'nsubj:pass':
+                passive = True
             ent1head = dt.nodes[ent1['starttok']]['head']
             ent2head = dt.nodes[ent2['starttok']]['head']
-            print ent1head, ent2head
+#            print ent1head, ent2head
             if ent1head == ent2head:
                 pred_string = dt.nodes[ent1head]['lemma']
                 pred_index = ent1head
@@ -209,9 +221,18 @@ class BinaryRelation():
                 if 'compound:prt' in dt.nodes[ent1head]['deps']:
                     for prt in dt.nodes[ent1head]['deps']['compound:prt']:
                         pred_string += '_' + dt.nodes[prt]['lemma']
-            print 'pred: ' + pred_string
-            print '------'
-        return (pred_string, pred_index)
+                # Add modifiers to verbs
+                mods = self.get_modifiers_to_verb(dt, pred_index, [])
+#                mods.sort()
+                for mod in mods:
+                    pred_string += '.' + dt.nodes[mod]['lemma']
+                # Add prepositions
+                if 'case' in dt.nodes[ent2['starttok']]['deps']:
+                    for prep in dt.nodes[ent2['starttok']]['deps']['case']:
+                        pred_string += '.' + dt.nodes[prep]['lemma']
+#            print 'pred: ' + pred_string
+#            print '------'
+        return (pred_string, pred_index, passive)
 
 
     def format_relation_string(self, ent1, ent2, pred, neg, passive):
