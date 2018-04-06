@@ -100,15 +100,15 @@ class Ner():
         # Get NER server hostname
         ner_host = self.config.get('StanfordNER','host_name')
         # Get jar file path
-        jar_file = self.config.get('StanfordNER','jar_file')
-        model_file = self.config.get('StanfordNER','model_file')
+#        jar_file = self.config.get('StanfordNER','jar_file')
+#        model_file = self.config.get('StanfordNER','model_file')
         # Get input and output directories, and input files
         indir = self.config.get('NER','pre_proc_out_dir')
         outdir = self.config.get('NER','out_dir')
 #        files = glob.glob(self.home+'/'+indir+'/*.tsv')
         # Initialise NER tagger
 ###        st = StanfordNERTagger(model_file, jar_file, encoding='utf-8')
-        st = sner.Ner(host='scribe.inf.ed.ac.uk',port=9199)
+        st = sner.Ner(host=ner_host,port=9199)
         for f in files:
             fpath = indir + '/' + f
             raw_sentences = []
