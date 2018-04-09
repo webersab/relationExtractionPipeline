@@ -2,15 +2,6 @@ BINARY RELATION EXTRACTION PIPELINE FOR GERMAN
 
 This repository contains a pipeline for the extraction of binary relations from German text. It takes as input a JSON formatted corpus file (see section "INPUT DATA FORMAT") and produces two output files (binary_realtions.json and types.txt). The binary_relations.json file contains those relations that were automatically extracted from the input corpus and types.txt contains a list of FIGER types for those entities participating in the binary relations. These output files may be used independently or as the interface to the language-independent section of Javad Hosseini's pipeline, to construct entailment graphs. Both output files are described in the section "OUTPUT FORMAT".
 
-The pipeline relies on the following external components:
-* Word tokeniser / CoNLL formatter: UDPipe
-* Universal dependency parser: UnstableParser
-* Named entity recogniser: Stanford NER
-* Named entity linker: AGDISTIS
-* DBPedia url to FIGER types mapping file
-
-The installation/configuration of these external components is described in the "REQUIRMENTS" section below.
-
 As of 09/04/2018 the pipeline performs the following steps:
 * Extract raw text from JSON format corpus and write each article to a separate file (main.py)
 * Sentence segmentation with NLTK (preprocessing.py)
@@ -21,6 +12,10 @@ As of 09/04/2018 the pipeline performs the following steps:
 * Extraction of common entities (nouns in the parser output) (helper_functions.py / nel.py)
 * Named entity linking with AGDISTIS (nel.py)
 * Binary relation extraction (binary_relation.py)
+
+The installation/configuration of the external components (UDPipe, UnstableParser, Stanford NER, AGDISTIS) is described in the "REQUIRMENTS" section below.
+
+AGDISITS returns DBpedia urls for those entities that it is able to link. These are mapped to FIGER types (via Freebase) so that both the English and German pipelines use the same type system. This is necessary to align English and German relations and entailment graphs for downstream multilingual tasks such as question answering. The DBpedia to FIGER mapping file is provided as a component of the pipeline, and is described in the "REQUIREMENTS" sectionb below.
 
 
 REQUIREMENTS
@@ -76,13 +71,12 @@ UDPipe model for German: http://ufal.mff.cuni.cz/udpipe
 * > wget https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-1990/udpipe-ud-2.0-conll17-170315.tar
 * > tar -xvf udpipe-ud-2.0-conll17-170315.tar
 
-DBPedia-to-FIGER types mapping file:
+DBPedia-to-FIGER types mapping file: <<<Complete this section>>>
 Download the following file from the DBPedia dumps (to keep this in line with the AGDISIS index we recommend using the 2016-04 version:
 freebase_links_de.ttl.gz
-Download the following files:
-freebasetypefile = 'entity2type_names.txt.gz'
-figertypefile = 'types.map.gz'
-Run scripts/DBPedia_to_FIGER.py
+Ensure that you have a copy of the following file: <<<Ask Javad who to attribute this to>>>
+entity2type_names.txt.gz
+Run command: python scripts/DBPedia_to_FIGER.py (constructs the types.map.gz file referenced in config.ini)
 
 
 INSTRUCTIONS
@@ -115,11 +109,30 @@ As of 09/04/2018 the pipeline requires that *at minimum* the title and articleId
 
 OUTPUT FORMAT
 
-<<<Describe the format of binary_relations.json and types.txt>>>
+The pipeline outputs two files:
+* binary_relations.json: JSON format file, contains details of the binary relations extracted from raw text, with one JSON object per line of text (i.e. sentence). 
+* types.txt: text file, contains a list of FIGER types present for the entities in binary_relations.json. This file is needed for the construction of entailment graphs using the pipeline developed in [0].
+
+Each JSON object in the binary_relations.json file (representing the relations found in the line of text) has the following format:
+* s: line of text (e.g. sentence)
+* date: date and time of the article
+* articleId: unique identifier of the article (matches articleId in input data file)
+* lineId: line number within article (numbering starts at zero)
+* rels: list of dictionaries, each representing a relation (r) extracted from the sentence. The format of the relations is a string separated with the symbol '::' and the following elements:
+  	* (optional) negation marker of the format: "NEG__"
+  	* predicate (of the format: "(predicate.1, predicate.2)")
+	* the canonical form of entity 1 (e.g. "Donald J Trump" and "Donald Trump" are both represented as "Donald_Trump")
+	* the canonical form of entity 2
+	* the FIGER type of entity 1 prepended with a # (e.g. "#person") 
+	* the FIGER type of entity 2 prepended with a #
+	* an indicator of whether each entity is a named entity (E) or a common/general entity (G)
+	* ??? <<<Ask Javad>>>
+	* token offset of the predicate (token numbers start at 'one')
+
 
 
 REFERENCES
 
-[0] <<<Add citation to Javad's paper upon acceptance>>>
+[0] <<<Add citation to Javad's TACL paper upon acceptance>>>
 
 [1] Zhang, C. and Weld, D. S. (2013). Harvesting parallel news streams to generate paraphrases of event relations. In Proceedings of the Conference on Empirical Methods in Natural Language Processing (EMNLP).
