@@ -74,8 +74,9 @@ UDPipe model for German: http://ufal.mff.cuni.cz/udpipe
 DBPedia-to-FIGER types mapping file: <<<Complete this section>>>
 Download the following file from the DBPedia dumps (to keep this in line with the AGDISIS index we recommend using the 2016-04 version:
 freebase_links_de.ttl.gz
-Ensure that you have a copy of the following file: <<<Ask Javad who to attribute this to>>>
-entity2type_names.txt.gz
+Ensure that you have a copy of the following files: <<<Ask Javad who to attribute this to>>>
+data/entity2type_names.txt.gz
+data/types.map.gz
 Run command: python scripts/DBPedia_to_FIGER.py (constructs the types.map.gz file referenced in config.ini)
 
 

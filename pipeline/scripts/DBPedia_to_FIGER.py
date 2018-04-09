@@ -4,10 +4,11 @@
 import gzip
 import simplejson as json
 
-outputfile = 'dbpedia_figer_map.json.gz'
-freebaselinkfile = 'freebase_links_de.ttl.gz'
-freebasetypefile = 'entity2type_names.txt.gz'
-figertypefile = 'types.map.gz'
+# Set paths for output file and freebase external links file (to be downloaded from DBPedia dump)
+outputfile = '<path>/dbpedia_figer_map.json.gz'
+freebaselinkfile = '<path>/freebase_links_de.ttl.gz'
+freebasetypefile = 'data/entity2type_names.txt.gz'
+figertypefile = 'data/types.map.gz'
 
 def dbpedia_url_to_freebase_url():
     d_to_f = {}
