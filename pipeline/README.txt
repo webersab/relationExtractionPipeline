@@ -1,9 +1,31 @@
 BINARY RELATION EXTRACTION PIPELINE FOR GERMAN
 
+This repository contains a pipeline for the extraction of binary relations from German text. It takes as input a JSON formatted corpus file (see section "INPUT DATA FORMAT") and produces two output files (binary_realtions.json and types.txt). The binary_relations.json file contains those relations that were automatically extracted from the input corpus and types.txt contains a list of FIGER types for those entities participating in the binary relations. These output files may be used independently or as the interface to the language-independent section of Javad Hosseini's pipeline, to construct entailment graphs. Both output files are described in the section "OUTPUT FORMAT".
+
+The pipeline relies on the following external components:
+* Word tokeniser / CoNLL formatter: UDPipe
+* Universal dependency parser: UnstableParser
+* Named entity recogniser: Stanford NER
+* Named entity linker: AGDISTIS
+* DBPedia url to FIGER types mapping file
+
+The installation/configuration of these external components is described in the "REQUIRMENTS" section below.
+
+As of 09/04/2018 the pipeline performs the following steps:
+* Extract raw text from JSON format corpus and write each article to a separate file (main.py)
+* Sentence segmentation with NLTK (preprocessing.py)
+* Word tokenisation / CoNLL format preprocessing with UDPipe (preprocessing.py)
+* Parsing with UnstableParser (parsing.py)
+* Parser output pre-processing for German compounds using an auxialliary script for the UnstableParser (parasing.py)
+* Named entity recognition with Stanford NER + german model (ner.py)
+* Extraction of common entities (nouns in the parser output) (helper_functions.py / nel.py)
+* Named entity linking with AGDISTIS (nel.py)
+* Binary relation extraction (binary_relation.py)
+
 
 REQUIREMENTS
 
-Python modules (tested-version):
+Python 2.7 with the following modules (tested-version):
     networkx (2.0)
     nltk (3.2.5)
     numpy (1.13.1)
@@ -69,6 +91,35 @@ INSTRUCTIONS
 2) Start the AGDISTIS and NER servers
 3) Set up the directory structure, run command: sh scripts/setup_dir.sh
 4) Amend config.ini as necessary
-5) Load data into 00-json-input (or use test file [recommended])
+5) Load JSON formatted data into 00-json-input. This data should take the format described in the "INPUT DATA FORMAT" section below
 5) Start the pipeline, run command: python main.py config.ini
 7) Check for output in 10-binary-relations
+
+
+INPUT DATA FORMAT
+
+The pipeline expects data in JSON format, with one JSON object per article.
+
+For the extraction of binary relations we have used a collection of German news articles crawled from the web by the Machine Tranlsation group at Edinburgh University, during the period 2008-2017. From this collection we have formatted a corpus following that used in the (English) Newsspike corpus [1]. This is the same format expected as input to the English pipeline developed by Javad Hosseini [0].
+
+The JSON object for each article in the German news corpus contains the following fields:
+* date - date and time that the article was crawled
+* title - article title
+* url - article source
+* text - content of the article
+* articleId - unique identifier for each article
+* autoDetectLanguage - article language as identified by the python langdetect module
+
+As of 09/04/2018 the pipeline requires that *at minimum* the title and articleId fields are available.
+
+
+OUTPUT FORMAT
+
+<<<Describe the format of binary_relations.json and types.txt>>>
+
+
+REFERENCES
+
+[0] <<<Add citation to Javad's paper upon acceptance>>>
+
+[1] Zhang, C. and Weld, D. S. (2013). Harvesting parallel news streams to generate paraphrases of event relations. In Proceedings of the Conference on Empirical Methods in Natural Language Processing (EMNLP).
