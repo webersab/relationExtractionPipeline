@@ -84,11 +84,13 @@ INSTRUCTIONS
 
 1) Ensure that the required python modules have been installed, and that the dependecies (a trained UnstableParser model, AGDISTIS, NER model, UDPipe model, DBPedia-to-figer map) are available
 2) Start the AGDISTIS and NER servers
-3) Set up the directory structure, run command: sh scripts/setup_dir.sh
-4) Amend config.ini as necessary
-5) Load JSON formatted data into 00-json-input. This data should take the format described in the "INPUT DATA FORMAT" section below
-5) Start the pipeline, run command: python main.py config.ini
-7) Check for output in 10-binary-relations
+3) Add the path to the UnstableParser (root directory) to the PYTHONPATH variable in your bash profile and restart the shell for the change to take effect (For users at Edinburgh University, add the following line to your .brc file: export PYTHONPATH=$PYTHONPATH:<path_to_UnstableParser>)
+4) Clone the german pipeline repository using the command: git clone https://<username>@bitbucket.org/lianeg/question-answering.git
+5) Set up the directory structure, run command: sh scripts/setup_dir.sh
+6) Amend config.ini as necessary
+7) Load JSON formatted data into 00-json-input. This data should take the format described in the "INPUT DATA FORMAT" section below
+8) Start the pipeline, run command: python main.py config.ini
+9) Check for output in 10-binary-relations
 
 
 INPUT DATA FORMAT

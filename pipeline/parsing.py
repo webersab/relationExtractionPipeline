@@ -9,7 +9,6 @@ import ConfigParser
 import logging
 
 # Custom
-sys.path.insert(0,'/afs/inf.ed.ac.uk/user/l/lguillou/Tools/UnstableParser')
 import unstable_parser as up
 import unstable_parser_post_proc as postproc
 
