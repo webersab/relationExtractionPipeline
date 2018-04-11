@@ -61,9 +61,6 @@ def dbpedia_to_figer(dbpedia,freebase,figer):
                 figer_type.append(figer[ft])
             else:
                 figer_type.append('')
-#        m[dbplink] = {"freebase_url": freebase_url,
-#                      "freebase_type": freebase_type,
-#                      "figer_type": figer_type}
         m[dbplink] = get_first_non_empty_figer(figer_type)
     return m
 
@@ -72,30 +69,6 @@ def get_first_non_empty_figer(l):
         if t != '':
             return t
     return ''
-
-
-#def dbpedia_to_figer(dbpedia,freebase,figer):
-#    m = {}
-#    for dbplink in dbpedia:
-#        freebase_type = []
-#        figer_type = []
-#        freebase_url = dbpedia[dbplink]
-#        if freebase_url in freebase:
-#            freebase_type = freebase[freebase_url]
-#        for ft in freebase_type:
-#            if ft in figer and figer[ft] != '':
-#                figer_type.append(figer[ft])
-#        m[dbplink] = [freebase_url, freebase_type, figer_type]
-#        return m
-
-#def write_map_to_file(m):
-#    with gzip.open(outputfile, 'w') as o:
-#        for dbpedia in m:
-#            entry = dbpedia # DBPedia url
-#            entry += '\t' + m[dbpedia][0] # Freebase url
-#            entry += '\t' + ' '.join(m[dbpedia][1]) # Freebase type
-#            entry += '\t' + ' '.join(m[dbpedia][2]) # FIGER type
-#            o.write(entry+'\n')
 
 # Get DBPedia url -> Freebase url links (from DBPedia Freebase links)
 res = dbpedia_url_to_freebase_url()
@@ -112,5 +85,3 @@ map_to_figer = dbpedia_to_figer(dbpedia_to_freebase,freebase_url_to_type,freebas
 # Output mapping to file
 with gzip.open(outputfile, 'w') as o:
     json.dump(map_to_figer, o)
-#write_map_to_file(map_to_figer)
-
