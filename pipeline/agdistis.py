@@ -1,15 +1,26 @@
+"""
+Adapted code from the AGDISTIS project:
+http://aksw.org/Projects/AGDISTIS.html
+
+Handles communication with the AGDISTIS server
+"""
+
+# Standard
 import requests
 import copy
 
-class Agdistis(object):
-    #agdistisApi = 'http://139.18.2.164:8080/AGDISTIS_DE'
-    #defaultAgdistisParams = {
-    #    'text': 'Die Stadt <entity>Dresden</entity> liegt in <entity>Sachsen</entity>',
-    #    'type': 'agdistis'
-    #    }
 
+class Agdistis(object):
+    """
+    gdistisApi = 'http://akswnc9.informatik.uni-leipzig.de:8113/AGDISTIS'
+    defaultAgdistisParams = {
+        'text': 'Die Stadt <entity>Dresden</entity> liegt in <entity>Sachsen</entity>',
+        'type': 'agdistis'
+        }
+    """
+    
     def __init__(self, url):
-        self.agdistisApi = url #'http://139.18.2.164:8080/AGDISTIS_DE'
+        self.agdistisApi = url
         self.defaultAgdistisParams = {
             'text': 'Die Stadt <entity>Dresden</entity> liegt in <entity>Sachsen</entity>',
             'type': 'agdistis'
@@ -38,7 +49,10 @@ class Agdistis(object):
         return self.disambiguate("<entity>%s</entity>"%(entity,))
 
 if __name__ == "__main__":
-    agdistis = Agdistis('http://139.18.2.164:8080/AGDISTIS_DE')
+    """
+    For testing against the German endpoint at Leipzig
+    """
+    agdistis = Agdistis('http://akswnc9.informatik.uni-leipzig.de:8113/AGDISTIS')
     entities = agdistis.disambiguate('<entity>Austria</entity>')
     entities = agdistis.disambiguateEntity('Austria')
     print(entities)

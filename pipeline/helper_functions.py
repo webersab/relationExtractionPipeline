@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Standard
 import collections
 import simplejson as json
 from nltk.parse import DependencyGraph
 
 
-# Read dependency parser output from file and construct graph
 def dependency_parse_to_graph(filename):
+    """
+    Read dependency parser output from file and construct graph
+    """
     data = ''
     dtree = []
     with open(filename, 'r') as f:
@@ -26,8 +29,10 @@ def dependency_parse_to_graph(filename):
     return dtree
 
 
-# Extract all tokens / multi-token spans from a dependency parse
 def extract_entities_from_dependency_parse(dtrees, postag):
+    """
+    Extract all tokens / multi-token spans from a dependency parse
+    """
     sents = []
     for x in range(0,len(dtrees)):
         tok_list = []
@@ -42,44 +47,19 @@ def extract_entities_from_dependency_parse(dtrees, postag):
     return sents
 
 
-# Extract all tokens / multi-token spans from a dependency parse
-#def extract_entities_from_dependency_parse(dtrees, postag):
-#    d = {'sentences': {}}
-#    for x in range(0,len(dtrees)):
-#        d['sentences'][x+1] = {'entities':{}}
-#        counter = 0
-#        tok_list = []
-#        index_list = []
-#        for node_index in dtrees[x].nodes:
-#            node = dtrees[x].nodes[node_index]
-#            if node['ctag'] == postag:
-#                tok_list.append(node['word'])
-#                index_list.append(node_index)
-#            else:
-#                if tok_list != []:
-#                    # Add entity to dictionary
-#                    span = ' '.join(tok_list)
-#                    starttok = index_list[0]
-#                    endtok = index_list[-1]
-#                    entity = {'entity': span, 'starttok': starttok, 'endtok': endtok}
-#                    d['sentences'][x+1]['entities'][counter] = entity
-#                    counter += 1
-#                    tok_list = []
-#                    index_list = []
-#    return d
-
-
-# Read a json file to a json object
 def read_json(filename):
+    """
+    Read a json file to a json object
+    """
     with open(filename, 'r') as f:
         data = json.load(f)
     return data
 
 
-# Convert unicode to string
-# Taken from StackOverflow:
-# https://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str
 def convert_unicode_to_str(data):
+    """
+    Convert unicode to string                                                                                                             Taken from StackOverflow:                                                                                                             https://stackoverflow.com/questions/1254454/fastest-way-to-convert-a-dicts-keys-values-from-unicode-to-str  
+    """
     if isinstance(data, basestring):
         return data.encode('utf-8')
     elif isinstance(data, collections.Mapping):

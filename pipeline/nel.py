@@ -13,7 +13,6 @@ import subprocess
 import simplejson as json
 from itertools import izip
 
-
 # Custom
 import helper_functions as hf
 from agdistis import Agdistis
@@ -21,12 +20,21 @@ from agdistis import Agdistis
 
 class Nel():
 
+    """
+    Perform entity linking using AGDISTIS
+    Input: common and named entities
+    Output: entities linked to DBPedia, and through Freebase to FIGER types
+    """
+    
     def __init__(self, config):
         self.config = config
         self.home = self.config.get('General', 'home')
         
 
     def NEL(self, files):
+        """
+        Main method
+        """
         print('NER and parsing complete\nNamed Entity Linking')
         # Extract nouns
         self.detect_nouns(files)
@@ -34,8 +42,10 @@ class Nel():
         self.agdistis(files)
         
 
-    # Extract noun spans
     def detect_nouns(self, files):
+        """
+        Extract noun spans from dependecy parser output
+        """
         # Get input and output directories, and input files
         indir = self.config.get('UnstableParser','post_proc_out_dir')
         outdir = self.config.get('Entities','out_dir')
@@ -43,7 +53,7 @@ class Nel():
             infile = indir + '/' + f
             dtrees = hf.dependency_parse_to_graph(infile)
             tagged_sents = hf.extract_entities_from_dependency_parse(dtrees, 'NOUN')
-            outfilename = self.home + '/' + outdir + '/' + f#.split('/')[-1].split('.')[0]+'.tsv'
+            outfilename = self.home + '/' + outdir + '/' + f
             with open(outfilename, 'w') as f:
                 for sent in tagged_sents:
                     for token in sent:
@@ -51,8 +61,11 @@ class Nel():
                     f.write('\n')
             
 
-    # Add <entity></entity> tags around each entity
     def format_nel_sentences(self, nerfile, entfile):
+        """
+        Format sentence string for input to AGDISTIS
+        Add <entity></entity> tags around each entity
+        """
         sentences = []
         ent_map = {}
         ner_sents = self.get_entities_from_file(nerfile, 'ner')
@@ -71,8 +84,10 @@ class Nel():
         return (sentences, ent_map)
 
 
-    # Create a mapping for NEs and common entities
     def create_map_entities(self, tagged):
+        """
+        Create a mapping for NEs and common entities
+        """
         m = {}
         prev_tag = '0'
         ent_list = []
@@ -107,8 +122,10 @@ class Nel():
         return m
     
     
-    # Merge NEs and common entities, handling overlaps
     def merge_entities(self, ner_tagged, ent_tagged):
+        """
+        Merge NEs and common entities, handling overlaps
+        """
         overlaps = []
         # Detect overlaps: where the NER tool found a named entity and the parser found a noun
         for t in range(0,len(ner_tagged)):
@@ -127,8 +144,10 @@ class Nel():
         return tagged
     
 
-    # Format the tagged sentences
     def add_entity_tags(self, tagged):
+        """
+        Format the tagged sentences - add <entity></entity> tags
+        """
         formatted_sent = ''
         prev_tag = '0'
         entpresent = False
@@ -153,8 +172,10 @@ class Nel():
         return formatted_sent
     
 
-    # Read files in which entities are marked and extract tagged lists
     def get_entities_from_file(self, filename, label):
+        """
+        Read files in which entities are marked and extract tagged lists
+        """
         sentences = []
         tagged_sent = []
         entity = False
@@ -183,16 +204,21 @@ class Nel():
         return sentences
 
 
-    # Get DBPedia to FIGER mapping
     def get_dbpedia_to_figer_mapping(self):
+        """
+        Get DBPedia to FIGER mapping
+        Use the mapping file that maps DBPedia->Freebase->FIGER
+        """
         mapfile = self.config.get('TypeMapping','map_file')
         with gzip.open(mapfile, 'r') as mfile:
             m = json.load(mfile)
         return m
 
     
-    # Convert character offset to token offset
     def convert_offsets(self,sentence):
+        """
+        Convert character offset to token offset
+        """
         conv = {}
         counter = 1
         for x in range(0,len(sentence)):
@@ -203,8 +229,10 @@ class Nel():
         return conv
 
 
-    # Named Entity linking using Agdistis
     def agdistis(self, files):
+        """
+        Named Entity linking using AGDISTIS
+        """
         nerindir = self.config.get('NER','out_dir')
         entindir = self.config.get('Entities','out_dir')
         outdir = self.config.get('Agdistis','out_dir')
@@ -224,31 +252,23 @@ class Nel():
             nel = {"file": nf.split('/')[-1], "sentences": {}}
             formatted_sents = [sent[2] for sent in formatted]
             text = '\n'.join(formatted_sents).decode('utf-8')
-#            disambig = ag.disambiguate(text)
-#            # Determine which sentence each disambiguated entity belongs to (using the start offset)
-#            clean_text = text.replace('<entity>','').replace('</entity>','')
-#            char_to_sent_map = self.char_to_sent_number(clean_text)
-#            # Split disambiguated entities by sentence
-#            disambig_map = self.disambiguated_entities_to_sent_number(disambig, char_to_sent_map)
-#            sent_start = 0
             for sent in range(0,len(formatted_sents)):
                 if '<entity>' in formatted_sents[sent]:
                     disambig = ag.disambiguate(formatted_sents[sent])
-#                # For each sentence, map entities to Freebase, convert to dictionary
-#                if sent in disambig_map:
-#                    converted = self.map_and_convert_nel(sent, sent_start, formatted[sent][2], disambig_map[sent], type_map, ent_map[sent])
+                # For each sentence, map entities to Freebase, convert to dictionary
                     converted = self.map_and_convert_nel(sent, formatted_sents[sent], disambig, type_map, ent_map[sent])
                     nel["sentences"][sent] = converted
-#                sent_start += len(formatted[sent][2].replace('<entity>','').replace('</entity>','').decode('utf-8')) +1# +1 is for the line break at the end of each sentence
             # Write to file
-            outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]#.split('.')[0] + '.json'
+            outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]
             with io.open(outfilename, 'w', encoding='utf8') as outfile:
                 data = json.dumps(nel, ensure_ascii=False)
                 outfile.write(unicode(data))
 
                 
-    # Map each disambiguated entity to its sentence
     def disambiguated_entities_to_sent_number(self, disambig, char_map):
+        """
+        Map each disambiguated entity to its sentence
+        """
         d = {}
         for ent in disambig:
             sent = char_map[ent["start"]]
@@ -259,54 +279,10 @@ class Nel():
         return d
     
                 
-#    # For each character in a text, find the sentence number
-#    def char_to_sent_number(self, text):
-#        d = {}
-#        counter = 0
-#        for x in range(0,len(text)):
-#            d[x] = counter
-#            if text[x] == '\n':
-#                counter += 1
-#        return d
-
-#    # Named Entity linking using Agdistis
-#    def agdistis(self, files):
-#        nerindir = self.config.get('NER','out_dir')
-#        entindir = self.config.get('Entities','out_dir')
-#        outdir = self.config.get('Agdistis','out_dir')
-#        url = self.config.get('Agdistis','url')
-#        nerfiles = sorted([self.home+'/'+nerindir+'/'+f for f in files])
-#        entfiles = sorted([self.home+'/'+entindir+'/'+f for f in files])
-#        ag = Agdistis(url)
-#        # Get DBPedia to FIGER mapping
-#        type_map = self.get_dbpedia_to_figer_mapping()
-#        for x in range(0,len(nerfiles)):
-#            nf = nerfiles[x]
-#            ef = entfiles[x]
-#            # Read file and format sentences
-#            temp = self.format_nel_sentences(nf, ef)
-#            formatted = temp[0]
-#            ent_map = temp[1]
-#            nel = {"file": nf.split('/')[-1], "sentences": {}}
-#            counter = 0
-#            for sent in formatted:
-#                if sent[1] == 1:
-#                    # Disambiguate using NEL
-#                    disambig = ag.disambiguate(sent[2])
-#                    # Map to Freebase, convert to dictionary 
-#                    converted = self.map_and_convert_nel(sent[2], disambig, type_map, ent_map[counter])
-#                    nel["sentences"][sent[0]] = converted
-#                counter += 1
-#            # Write to file
-#            outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]#.split('.')[0] + '.json'
-#            with io.open(outfilename, 'w', encoding='utf8') as outfile:
-#                data = json.dumps(nel, ensure_ascii=False)
-#                outfile.write(unicode(data))
-
-
-
-    # Map the DBPedia urls to Freebase urls
     def map_and_convert_nel(self, sent_num, sent_str, nel_output, tm, em):
+        """
+        Map the DBPedia urls to Freebase urls
+        """
         conv_nel = {"sentenceStr": sent_str, "entities": {}}
         clean_sent = sent_str.replace('<entity>','').replace('</entity>','')
         char_to_tok = self.convert_offsets(clean_sent.decode('utf-8'))
@@ -314,7 +290,6 @@ class Nel():
         for e in nel_output:
             # Convert char to word indices
             start = e['start']
-#            start = e['start'] - sent_start
             offset = e['offset']
             starttok = char_to_tok[start]
             e["starttok"] = starttok
@@ -331,39 +306,6 @@ class Nel():
             if isinstance(e['namedEntity'], (int,long)):
                 string_value = str(e['namedEntity'])
                 e["namedEntity"] = string_value
-#            #conv = hf.convert_unicode_to_str(e)
             conv_nel["entities"][counter] = e
             counter += 1
         return conv_nel
-
-
-#    # Map the DBPedia urls to Freebase urls
-#    def map_and_convert_nel(self, sent_num, sent_start, sent_str, nel_output, tm, em):
-#        conv_nel = {"sentenceStr": sent_str, "entities": {}}
-#        clean_sent = sent_str.replace('<entity>','').replace('</entity>','')
-#        char_to_tok = self.convert_offsets(clean_sent.decode('utf-8'))
-#        counter = 0
-#        for e in nel_output:
-#            # Convert char to word indices
-#            #start = e['start']
-#            start = e['start'] - sent_start
-#            offset = e['offset']
-#            starttok = char_to_tok[start]
-#            e["starttok"] = starttok
-#            e["endtok"] = char_to_tok[start+offset-1]
-#            # Map to FIGER
-#            dbpedia_url = e["disambiguatedURL"]
-#            figer_type = "none"
-#            if dbpedia_url in tm and tm[dbpedia_url] != '':
-#                figer_type = tm[dbpedia_url]
-#            e["FIGERType"] = figer_type
-#            # Add indicator of common entity or named entity
-#            e["entityType"] = em[starttok][1][0:3]
-#            # Convert numbers to strings
-#            if isinstance(e['namedEntity'], (int,long)):
-#                string_value = str(e['namedEntity'])
-#                e["namedEntity"] = string_value
-#            #conv = hf.convert_unicode_to_str(e)
-#            conv_nel["entities"][counter] = e
-#            counter += 1
-#        return conv_nel

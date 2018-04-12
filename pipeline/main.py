@@ -1,9 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# HELPFUL starter code
-# https://github.com/ufal/udpipe/blob/master/bindings/python/examples/run_udpipe.py
-# https://github.com/ufal/udpipe/blob/master/bindings/python/examples/udpipe_model.py
+"""
+German binary relation extraction pipeline
+
+This pipeline performs the following steps:
+    * Pre-processing (sentence segmentation, word tokenisation)
+    * Dependency parsing
+    * Named entity recognition
+    * Named entity linking
+    * Binary relation extraction
+and outputs three files:
+    * Binary relations text file (human readable)
+    * Binary relations JSON file (for processing by Javad Hosseini's entailment graph construction pipeline)
+    * Types text file (for processing by Javad Hosseini's entailment graph construction pipeline)
+
+To run the pipeline, use the command: python main.py config.ini
+
+Liane Guillou, The University of Edinburgh, April 2018
+"""
 
 # Standard
 import sys
@@ -14,21 +29,28 @@ import ConfigParser
 from datetime import datetime
 from multiprocessing import Process
 
-
 # Custom
 import preprocessing as pre
-#import parsing
 import ner
 import nel
 import binary_relation
 
-# Extract config json from file
+
 def get_config(configfile):
+    """
+    Extract config json from file 
+    """
     cfg = ConfigParser.ConfigParser()
     cfg.read(configfile)
     return cfg
 
+
 def read_json_input(config):
+    """
+    Read the JSON format corpus file and write the text of each article
+    to a separate text file. This is hacky and requires a longer-term 
+    solution.
+    """
     filenames = []
     home = config.get('General','home')
     indir = config.get('Input','json_dir')
@@ -43,19 +65,11 @@ def read_json_input(config):
             filenames.append(outfilename)
     return filenames
 
-# Get a list of filenames
-#def get_file_list(config):
-#    l = []
-#    home = config.get('General','home')
-#    indir = config.get('Input','data')
-#    files = glob.glob(home+'/'+indir+'/*')
-#    for filepath in files:
-#        filename = filepath.split('/')[-1]
-#        l.append(filename)
-#    return l
-
 
 if __name__ == "__main__":
+    """
+    Calls each of the pipeline steps in sequence
+    """
     # Set up logging
     logging.basicConfig(filename='pipeline.log',level=logging.DEBUG)
     logging.info('Started at: '+str(datetime.now()))
@@ -63,14 +77,15 @@ if __name__ == "__main__":
     configfile = sys.argv[1]
     # Get configuration settings
     configmap = get_config(configfile)
+    # The untable parser uses the namespace "parser" which is the same
+    # name as a standard python library. To get around this problem
+    # add the unstable parser path to sys.path before importing the
+    # "parsing.py" module
     unstableparserpath = configmap.get('UnstableParser','path')
     sys.path.insert(0,unstableparserpath)
-    print sys.path
     import parsing
     # Get list of files for processing
     file_list = read_json_input(configmap)
-    #file_list = file_list[0:10]
-    #file_list = get_file_list(configmap)
     # Sentence segmentation
     preprocessor = pre.Preprocessor(configmap)
     file_list = preprocessor.split_sentences(file_list)

@@ -4,7 +4,6 @@
 # Standard
 import sys
 import codecs
-#import glob
 import logging
 import nltk.data
 from datetime import datetime
@@ -15,20 +14,31 @@ import udpipe_model as udp
 
 class Preprocessor():
 
+    """
+    Perform preprocessing:
+        * segment sentences
+        * word tokenise sentences
+        * process with UDPipe - produces CoNLL format required by the UnstableParser
+    Input: raw text
+    Output: sentence segmented, word tokenised, CoNLL format text
+    """
+    
     def __init__(self, config):
         self.config = config
         # Get home directory
         self.home = self.config.get('General','home')
 
         
-    # Split sentences using NLTKs PunktTokenizer
     def split_sentences(self, files):
+        """
+        Split sentences using NLTKs PunktTokenizer
+        Use segmentation model specifed in config.ini as "seg_model"
+        """
         file_list = []
         indir = self.config.get('Input','raw_input')
         outdir = self.config.get('Preprocessor','out_dir')
         model = self.config.get('Preprocessor','seg_model')
         splitter = nltk.data.load(model)
-#        files = glob.glob(self.home+'/'+indir+'/*.txt')
         for f in files:
             infile = indir + '/' + f
             # Read text
@@ -38,16 +48,17 @@ class Preprocessor():
             segs = splitter.tokenize(text.decode('utf-8'))
             if len(segs) >= 10:
                 file_list.append(f)
-#            outfilename = infile.split('/')[-1]
-            outfile = self.home+'/'+outdir+'/'+f#outfilename
+            outfile = self.home+'/'+outdir+'/'+f
             with codecs.open(outfile, 'w', 'utf-8') as o:
                 for seg in segs:
                     o.write(seg+'\n')
         return file_list
                     
             
-    # UDPipe pre-processing
     def udpipe(self, files):
+        """
+        Preprocess with UDPipe to get CoNLL format files
+        """
         # Get UDPipe configurations
         outformat = self.config.get('UDPipe','out_format')
         outdir = self.config.get('UDPipe','out_dir')
@@ -65,7 +76,6 @@ class Preprocessor():
         # Process input files
         logging.info('Processing input files:')
         indir = self.config.get('Preprocessor','out_dir')
-#        files = glob.glob(self.home+'/'+indir+'/*.txt') 
         for f in files:
             infile = indir + '/' + f
             logging.info('  '+infile)
@@ -79,7 +89,6 @@ class Preprocessor():
                 model.parse(s)
             # Output to file
             conllu = model.write(sentences, outformat)
-#            outfilename = infile.split('/')[-1].split('.')[0]#+'.conllu'
-            outfile = self.home+'/'+outdir+'/'+f#outfilename
+            outfile = self.home+'/'+outdir+'/'+f
             with codecs.open(outfile, 'w', 'utf-8') as o:
                 o.write(conllu)

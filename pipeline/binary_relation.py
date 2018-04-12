@@ -8,7 +8,6 @@ import codecs
 import csv
 import ConfigParser
 import logging
-#import networkx
 import json
 from itertools import chain
 from itertools import product
@@ -20,13 +19,21 @@ import helper_functions as hf
 
 class BinaryRelation():
 
+    """
+    Perform binary relation extraction
+    Input: dependency parse, common and named entities, entity linking information
+    Output: binary relations in text and JSON format, list of types (text file)
+    """
+    
     def __init__(self, config):
         self.config = config
         self.home = self.config.get('General', 'home')
 
         
-    # Extract binary relations by combining output of the dependency parser and entity linker
     def extract_binary_relations(self, files):
+        """
+        Extract binary relations by combining output of the dependency parser and entity linker
+        """
         dicttypes = {}
         print('process: Extract binary relations')
         common_entities = self.config.get('NEL','common_entities')
@@ -40,7 +47,6 @@ class BinaryRelation():
             filenamestem = df.split('/')[-1]#.split('.')[0]
             ef = entfilepath+'/'+filenamestem#+'.json'
             entities = hf.read_json(ef)
-            #entities = self.calculate_token_spans_entities(dtree, ne)
             # Extract binary relations
             res = self.extract(dtree, entities, f)
             relations = res[0]
@@ -54,8 +60,11 @@ class BinaryRelation():
         self.output_type_list(dicttypes)
 
 
-    # Write list of types to file:
     def output_type_list(self, d):
+        """
+        Write list of types to file
+        types file is passed to Javad Hosseini's pipeline for entailment graph generation 
+        """
         outdir = self.config.get('Output', 'out_dir')
         filename = self.config.get('Output','types_list')
         listtypes = d.keys()
@@ -64,16 +73,21 @@ class BinaryRelation():
                 f.write(t + '\n')
 
 
-    # Maintain a dictionary of types
     def update_dict_types(self, d, types):
+        """
+        Maintain a dictionary of types 
+        """
         for t in types:
             if not t in d:
                 d[t] = 1
         return d
         
 
-    # Output sentence relations to json
     def output_to_json(self, l):
+        """
+        Output sentence relations to JSON
+        For the JSON format binary relations output file
+        """
         outdir = self.config.get('Output', 'out_dir')
         outfile = self.config.get('Output', 'json_file')
         json_str = '\n'.join([json.dumps(d, ensure_ascii=False).encode('utf8') for d in l])
@@ -81,8 +95,11 @@ class BinaryRelation():
             f.write(json_str + '\n')
 
 
-    # Format relations for JSON file
     def format_json_relations(self, rels):
+        """
+        Format relations for JSON file
+        JSON file is passed to Javad Hosseini's pipeline for entailment graph generation
+        """
         listr = []
         listt = []
         for r in rels:
@@ -108,8 +125,10 @@ class BinaryRelation():
         return (listr, listt)
             
             
-    # Perform the extraction
     def extract(self, dt, ent, f):
+        """
+        Perform the extraction 
+        """
         rels = {}
         listsentrels = []
         listtypes = []
@@ -119,7 +138,6 @@ class BinaryRelation():
             dictsentrels = OrderedDict()
             dpsenttree = dt[int(sent)]
             sentstring = self.get_sentence(dpsenttree)
-#            print sentstring
             entities = ent['sentences'][sent]['entities']
             # Get relations
             r = self.get_relations(dpsenttree, entities)
@@ -133,12 +151,13 @@ class BinaryRelation():
             listtypes += res[1]
             listsentrels.append(dictsentrels)
             rels[sent] = {'sentence': sentstring, 'relations': r}
-#        print(rels)
         return (rels, listsentrels, listtypes)
 
 
-    # Extract the sentence text from the dependency tree
     def get_sentence(self, dt):
+        """
+        Extract the sentence text from the dependency tree
+        """
         t = []
         for node_index in dt.nodes:
             word = dt.nodes[node_index]['word']
@@ -149,6 +168,10 @@ class BinaryRelation():
 
 
     def get_negation(self, dt, i, neg):
+        """
+        Check to see if the predicate is negated
+        Look for the POS-tag "PTKNEG" and dependency "advmod"
+        """
         if 'advmod' in dt.nodes[i]['deps']:
             # Check for negations at sub-level
             l = dt.nodes[i]['deps']['advmod']
@@ -161,6 +184,10 @@ class BinaryRelation():
 
 
     def get_modifiers_to_verb(self, dt, i, mods):
+        """
+        Get modifiers of the verb (i.e. the predicate)
+        Look for the "advmod" dependency
+        """
         if 'advmod' in dt.nodes[i]['deps']:
             l = dt.nodes[i]['deps']['advmod']
             for n in l:
@@ -170,8 +197,10 @@ class BinaryRelation():
         return mods
 
     
-    # Identify the binary relations
     def get_relations(self, dt, ent):
+        """
+        Identify the binary relations
+        """
         rels = []
         ent_list = ent.keys()
         # For every pair of entities:
@@ -198,14 +227,12 @@ class BinaryRelation():
 
 
     def get_predicate(self, dt, ent1, ent2):
+        """
+        Get the predicate that links the two entities
+        """
         pred_string = ''
         pred_index = -1
         passive = False
-        temp = [u'Katrin Göring-Eckardt', u'Nacht']
-        if ent1['namedEntity'] in temp and ent2['namedEntity'] in temp:
-            print dt
-            print ent1
-            print ent2
         ent1rel = dt.nodes[ent1['starttok']]['rel']
         ent2rel = dt.nodes[ent2['starttok']]['rel']
         if ent1rel in ['nsubj', 'nsubj:pass'] and ent2rel in ['obj', 'obl']:
@@ -213,7 +240,6 @@ class BinaryRelation():
                 passive = True
             ent1head = dt.nodes[ent1['starttok']]['head']
             ent2head = dt.nodes[ent2['starttok']]['head']
-#            print ent1head, ent2head
             if ent1head == ent2head:
                 pred_string = dt.nodes[ent1head]['lemma']
                 pred_index = ent1head
@@ -223,19 +249,20 @@ class BinaryRelation():
                         pred_string += '_' + dt.nodes[prt]['lemma']
                 # Add modifiers to verbs
                 mods = self.get_modifiers_to_verb(dt, pred_index, [])
-#                mods.sort()
                 for mod in mods:
                     pred_string += '.' + dt.nodes[mod]['lemma']
                 # Add prepositions
                 if 'case' in dt.nodes[ent2['starttok']]['deps']:
                     for prep in dt.nodes[ent2['starttok']]['deps']['case']:
                         pred_string += '.' + dt.nodes[prep]['lemma']
-#            print 'pred: ' + pred_string
-#            print '------'
         return (pred_string, pred_index, passive)
 
 
     def format_relation_string(self, ent1, ent2, pred, neg, passive):
+        """
+        Format the relation as a string
+        For output in the human-readable binary relations file
+        """
         if 'notInWiki' in ent1['disambiguatedURL']:
             ent1string = ent1['namedEntity'].replace(' ', '_')
         else:
@@ -253,8 +280,10 @@ class BinaryRelation():
         return s
 
 
-    # Write the binary relations to file
     def write_to_human_readable_file(self, r):
+        """
+        Write the binary relations to file
+        """
         outdir = self.config.get('Output','out_dir')
         outfile = self.config.get('Output','human_readable_file')
         filename = self.home + '/' + outdir + '/' + outfile

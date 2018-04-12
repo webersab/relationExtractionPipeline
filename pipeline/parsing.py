@@ -4,7 +4,6 @@
 # Standard
 import sys
 import codecs
-#import glob
 import ConfigParser
 import logging
 
@@ -15,12 +14,22 @@ import unstable_parser_post_proc as postproc
 
 class UnstParser():
 
+    """
+    Perform dependency parsing using the UnstableParser
+    Input: CoNLL format files (containing segmented, word tokenised sentences)
+    Output: CoNLL format files with dependencies and POS-tags
+    """
+    
     def __init__(self, config):
         self.config = config
         # Get home directory
         self.home = self.config.get('General','home')
 
+        
     def parse(self, files):
+        """
+        Main function
+        """
         print('process: parse')
         # Dependency parse with the UnstableParser
         self.unstable_parser(files)
@@ -28,17 +37,18 @@ class UnstParser():
         self.post_process_parsed_output(files)
 
 
-    # Parse with the UnstableParser
     def unstable_parser(self, files):
+        """
+        Parse with the UnstableParser
+        """
         # Parser path
         parserpath = self.config.get('UnstableParser','path')
-#        # Get input directory (output of udpipe)
+        # Get input directory (output of udpipe)
         indir = self.config.get('UDPipe','out_dir')
         # Get UnstableParser configurations
         parserconfig = self.config.get('UnstableParser','config_file')
         savedir = self.config.get('UnstableParser','save_dir')
         outdir = self.config.get('UnstableParser','out_dir')
-#        files = glob.glob(self.home+'/'+indir+'/*')
         file_list = [self.home+'/'+indir+'/'+f for f in files]
         # Initialise parser
         logging.info('Initialising the UnstableParser:')
@@ -49,8 +59,10 @@ class UnstParser():
         uparser.parse(outputdir, file_list)
         
 
-    # Post-process the UnstableParser output (German only)
     def post_process_parsed_output(self, files):
+        """
+        Post-process the UnstableParser output (German only)
+        """
         # Get language
         language = self.config.get('General','language')
         # Step is required for German only
@@ -60,7 +72,6 @@ class UnstParser():
             # Get input files directory (output of UnstableParser)
             indir = self.config.get('UnstableParser','out_dir')
             outdir = self.config.get('UnstableParser','post_proc_out_dir')
-#            files = glob.glob(self.home+'/'+indir+'/*')
             # Post-process each file
             logging.info('Post-processing input files:')
             for f in files:
