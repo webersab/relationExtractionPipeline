@@ -8,7 +8,7 @@ import codecs
 import csv
 import ConfigParser
 import logging
-import networkx
+#import networkx
 import json
 from itertools import chain
 from itertools import product

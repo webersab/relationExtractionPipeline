@@ -21,16 +21,19 @@ AGDISITS returns DBpedia urls for those entities that it is able to link. These 
 REQUIREMENTS
 
 Python 2.7 with the following modules (tested-version):
-    networkx (2.0)
-    nltk (3.2.5)
-    numpy (1.13.1)
-    python-dateutil (2.6.1)
-    requests (2.18.4)
-    simplejson (3.11.1)
-    sner (0.2.3)
-    subprocess32 (3.2.7)
-    tensorflow (1.3.0)
-    ufal.udpipe (1.1.0.1)
+    backports.lzma==0.0.8
+    matplotlib==2.0.2
+    nltk==3.2.5
+    numpy==1.13.1
+    python-dateutil==2.6.1
+    requests==2.18.4
+    scipy==0.19.1
+    simplejson==3.11.1
+    sner==0.2.3
+    subprocess32==3.2.7
+    tensorflow==1.3.0
+    ufal.udpipe==1.1.0.1
+To install the required modules run the command: pip install -r python-requirements.txt
 
 UnstableParser: https://github.com/tdozat/UnstableParser
 Train a German parser model using the Universal Dependencies version 2.0 treebank from the CoNLL 2017 shared task: http://universaldependencies.org/conll17/
@@ -41,7 +44,7 @@ Install and configure AGDISTIS to use the German index:
 * > cd AGDISTIS
 * > wget http://hobbitdata.informatik.uni-leipzig.de/agdistis/dbpedia_index_2016-04/de/indexdbpedia_de_2016.zip
 * Unzip the index file
-* Ensure that the nodeType, edgeType, baseURI, and endpoint properties in the AGDISTIS/src/main/resources/config/agdistis.properties file are set to point to http://de.dbpedia.org and that the index points the german index directory
+* Ensure that the nodeType, edgeType, baseURI, and endpoint properties in the AGDISTIS/src/main/resources/config/agdistis.properties file are set to point to http://de.dbpedia.org, that the index points the german index directory, and that commonEntities is set to true
 * > mvn tomcat:run
 * To test that the installation worked, try running the command:
      > curl --data-urlencode "text='<entity>Angela Merkel</entity>'" -d type='agdistis' http://<server_name>:8080/AGDISTIS
@@ -84,13 +87,12 @@ INSTRUCTIONS
 
 1) Ensure that the required python modules have been installed, and that the dependecies (a trained UnstableParser model, AGDISTIS, NER model, UDPipe model, DBPedia-to-figer map) are available
 2) Start the AGDISTIS and NER servers
-3) Add the path to the UnstableParser (root directory) to the PYTHONPATH variable in your bash profile and restart the shell for the change to take effect (For users at Edinburgh University, add the following line to your .brc file: export PYTHONPATH=$PYTHONPATH:<path_to_UnstableParser>)
-4) Clone the german pipeline repository using the command: git clone https://<username>@bitbucket.org/lianeg/question-answering.git
-5) Set up the directory structure, run command: sh scripts/setup_dir.sh
-6) Amend config.ini as necessary
-7) Load JSON formatted data into 00-json-input. This data should take the format described in the "INPUT DATA FORMAT" section below
-8) Start the pipeline, run command: python main.py config.ini
-9) Check for output in 10-binary-relations
+3) Clone the german pipeline repository using the command: git clone https://<username>@bitbucket.org/lianeg/question-answering.git
+4) Set up the directory structure, run command: sh scripts/setup_dir.sh
+5) Amend config.ini as necessary
+6) Load JSON formatted data into 00-json-input. This data should take the format described in the "INPUT DATA FORMAT" section below
+7) Start the pipeline, run command: python main.py config.ini
+8) Check for output in 10-binary-relations
 
 
 INPUT DATA FORMAT

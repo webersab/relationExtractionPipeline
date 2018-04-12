@@ -13,7 +13,7 @@ import unstable_parser as up
 import unstable_parser_post_proc as postproc
 
 
-class Parser():
+class UnstParser():
 
     def __init__(self, config):
         self.config = config
@@ -42,11 +42,11 @@ class Parser():
         file_list = [self.home+'/'+indir+'/'+f for f in files]
         # Initialise parser
         logging.info('Initialising the UnstableParser:')
-        parser = up.UnstableParser(parserpath, savedir)
+        uparser = up.UnstableParser(parserpath, savedir)
         # Parse each file
         outputdir = self.home + '/' + outdir
         logging.info('Parsing input files in: ' + indir)
-        parser.parse(outputdir, file_list)
+        uparser.parse(outputdir, file_list)
         
 
     # Post-process the UnstableParser output (German only)

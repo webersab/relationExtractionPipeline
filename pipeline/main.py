@@ -17,11 +17,10 @@ from multiprocessing import Process
 
 # Custom
 import preprocessing as pre
-import parsing
+#import parsing
 import ner
 import nel
 import binary_relation
-
 
 # Extract config json from file
 def get_config(configfile):
@@ -64,9 +63,13 @@ if __name__ == "__main__":
     configfile = sys.argv[1]
     # Get configuration settings
     configmap = get_config(configfile)
+    unstableparserpath = configmap.get('UnstableParser','path')
+    sys.path.insert(0,unstableparserpath)
+    print sys.path
+    import parsing
     # Get list of files for processing
     file_list = read_json_input(configmap)
-    file_list = file_list[0:10]
+    #file_list = file_list[0:10]
     #file_list = get_file_list(configmap)
     # Sentence segmentation
     preprocessor = pre.Preprocessor(configmap)
@@ -74,8 +77,8 @@ if __name__ == "__main__":
     # Pre-process files with UDPipe
     preprocessor.udpipe(file_list)
     # Simultaneously parse and perform NER
-    parser = parsing.Parser(configmap)
-    parse_proc = Process(target=parser.parse, args=(file_list,))
+    uparser = parsing.UnstParser(configmap)
+    parse_proc = Process(target=uparser.parse, args=(file_list,))
     parse_proc.start()
     ne_rec = ner.Ner(configmap)
     ner_proc = Process(target=ne_rec.NER, args=(file_list,))
