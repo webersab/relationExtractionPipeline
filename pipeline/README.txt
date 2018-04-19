@@ -36,7 +36,8 @@ Python 2.7 with the following modules (tested-version):
 To install the required modules run the command: pip install -r python-requirements.txt
 
 UnstableParser: https://github.com/tdozat/UnstableParser
-Train a German parser model using the Universal Dependencies version 2.0 treebank from the CoNLL 2017 shared task: http://universaldependencies.org/conll17/
+* Train a German parser model using the Universal Dependencies version 2.0 treebank from the CoNLL 2017 shared task: http://universaldependencies.org/conll17/
+* If you take a pre-trained model from elsewhere, remember to change the setting "data_dir" ("DEFAULT" section) of the saves/defaults.cfg to point to the CoNLL German vectors file "de.vectors.xz". You also need to set the paths for "train_files" and "parse_files" in the "Configurable" section (though it is unclear as to why the parser requires access to these files at test time)
 
 AGDISTIS: https://github.com/dice-group/AGDISTIS
 Install and configure AGDISTIS to use the German index:
