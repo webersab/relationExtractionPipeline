@@ -46,7 +46,7 @@ class UnstParser():
         # Get input directory (output of udpipe)
         indir = self.config.get('UDPipe','out_dir')
         # Get UnstableParser configurations
-        parserconfig = self.config.get('UnstableParser','config_file')
+#        parserconfig = self.config.get('UnstableParser','config_file')
         savedir = self.config.get('UnstableParser','save_dir')
         outdir = self.config.get('UnstableParser','out_dir')
         file_list = [self.home+'/'+indir+'/'+f for f in files]
