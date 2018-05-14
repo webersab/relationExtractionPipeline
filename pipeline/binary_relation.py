@@ -40,12 +40,12 @@ class BinaryRelation():
         entfilepath = self.config.get('Agdistis', 'out_dir')
         dpindir = self.config.get('UnstableParser','post_proc_out_dir')
         for f in files:
-            df = dpindir + '/' + f
+            df = self.home + '/' + dpindir + '/' + f
             # Read dependency parse
             dtree = hf.dependency_parse_to_graph(df)
             # Read entities
             filenamestem = df.split('/')[-1]#.split('.')[0]
-            ef = entfilepath+'/'+filenamestem#+'.json'
+            ef = self.home+'/'+entfilepath+'/'+filenamestem#+'.json'
             entities = hf.read_json(ef)
             # Extract binary relations
             res = self.extract(dtree, entities, f)
@@ -68,7 +68,7 @@ class BinaryRelation():
         outdir = self.config.get('Output', 'out_dir')
         filename = self.config.get('Output','types_list')
         listtypes = d.keys()
-        with open(outdir + '/' + filename, 'w') as f:
+        with open(self.home + '/' + outdir + '/' + filename, 'w') as f:
             for t in listtypes:
                 f.write(t + '\n')
 
@@ -91,7 +91,7 @@ class BinaryRelation():
         outdir = self.config.get('Output', 'out_dir')
         outfile = self.config.get('Output', 'json_file')
         json_str = '\n'.join([json.dumps(d, ensure_ascii=False).encode('utf8') for d in l])
-        with open(outdir + '/' + outfile, 'a') as f:
+        with open(self.home + '/' + outdir + '/' + outfile, 'a') as f:
             f.write(json_str + '\n')
 
 

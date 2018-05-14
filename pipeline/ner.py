@@ -56,7 +56,7 @@ class Ner():
         # Get UDPipe-processed files
         indir = self.config.get('UDPipe','out_dir')
         for f in files:
-            infile = indir + '/' + f
+            infile = self.home + '/' + indir + '/' + f
             sentences = self.extract_sentences(infile)
             outfilename = self.home + '/' + outdir + '/' + f
             with open(outfilename, 'w') as outfile:
@@ -115,7 +115,7 @@ class Ner():
         # Initialise NER server
         st = sner.Ner(host=ner_host,port=9199)
         for f in files:
-            fpath = indir + '/' + f
+            fpath = self.home + '/' + indir + '/' + f
             raw_sentences = []
             tagged_sentences = []
             # Read tokenised raw sentences

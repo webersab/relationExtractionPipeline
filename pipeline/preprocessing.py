@@ -40,7 +40,7 @@ class Preprocessor():
         model = self.config.get('Preprocessor','seg_model')
         splitter = nltk.data.load(model)
         for f in files:
-            infile = indir + '/' + f
+            infile = self.home + '/' + indir + '/' + f
             # Read text
             with open(infile) as i:
                 text = ''.join(i.readlines())
@@ -77,7 +77,7 @@ class Preprocessor():
         logging.info('Processing input files:')
         indir = self.config.get('Preprocessor','out_dir')
         for f in files:
-            infile = indir + '/' + f
+            infile = self.home + '/' + indir + '/' + f
             logging.info('  '+infile)
             # Read text
             with open(infile) as i:

@@ -72,10 +72,11 @@ class UnstParser():
             # Get input files directory (output of UnstableParser)
             indir = self.config.get('UnstableParser','out_dir')
             outdir = self.config.get('UnstableParser','post_proc_out_dir')
+            outdirpath = self.home + '/' + outdir
             # Post-process each file
             logging.info('Post-processing input files:')
             for f in files:
-                infile = indir + '/' + f
+                infile = self.home + '/' + indir + '/' + f
                 logging.info('  '+infile)
                 originalfile = self.home + '/' + origdir + '/' + infile.split('/')[-1]
-                postproc.restore(originalfile, infile, outdir)
+                postproc.restore(originalfile, infile, outdirpath)
