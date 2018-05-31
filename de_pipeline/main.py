@@ -22,7 +22,6 @@ Liane Guillou, The University of Edinburgh, April 2018
 
 # Standard
 import sys
-import json
 import glob
 import logging
 import ConfigParser
@@ -45,27 +44,6 @@ def get_config(configfile):
     return cfg
 
 
-def read_json_input(config):
-    """
-    Read the JSON format corpus file and write the text of each article
-    to a separate text file. This is hacky and requires a longer-term 
-    solution.
-    """
-    filenames = []
-    home = config.get('General','home')
-    indir = config.get('Input','json_dir')
-    infile = config.get('Input', 'json_file')
-    outdir = config.get('Input', 'raw_input')
-    with open(home+'/'+indir+'/'+infile, 'r') as ifile:
-        for line in ifile:
-            data = json.loads(line)
-            outfilename = data['articleId']
-            with open(home+'/'+outdir+'/'+outfilename, 'w') as ofile:
-                ofile.write(data['text'].encode('utf8'))
-            filenames.append(outfilename)
-    return filenames
-
-
 if __name__ == "__main__":
     """
     Calls each of the pipeline steps in sequence
@@ -84,11 +62,9 @@ if __name__ == "__main__":
     unstableparserpath = configmap.get('UnstableParser','path')
     sys.path.insert(0,unstableparserpath)
     import parsing
-    # Get list of files for processing
-    file_list = read_json_input(configmap)
-    # Sentence segmentation
+    # Batching and sentence segmentation
     preprocessor = pre.Preprocessor(configmap)
-    file_list = preprocessor.split_sentences(file_list)
+    file_list = preprocessor.batch_and_segment()
     # Pre-process files with UDPipe
     preprocessor.udpipe(file_list)
     # Simultaneously parse and perform NER
