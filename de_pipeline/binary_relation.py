@@ -185,11 +185,11 @@ class BinaryRelation():
 
     def get_modifiers_to_verb(self, dt, i, mods):
         """
-        Get modifiers of the verb (i.e. the predicate)
-        Look for the "advmod" dependency
+        Get open clausal components of the verb (i.e. the predicate)
+        Look for the "xcomp" dependency
         """
-        if 'advmod' in dt.nodes[i]['deps']:
-            l = dt.nodes[i]['deps']['advmod']
+        if 'xcomp' in dt.nodes[i]['deps']:
+            l = dt.nodes[i]['deps']['xcomp']
             for n in l:
                 if dt.nodes[n]['tag'] != 'PTKNEG':
                     mods.append(n)
@@ -235,20 +235,23 @@ class BinaryRelation():
         passive = False
         ent1rel = dt.nodes[ent1['starttok']]['rel']
         ent2rel = dt.nodes[ent2['starttok']]['rel']
-        if ent1rel in ['nsubj', 'nsubj:pass'] and ent2rel in ['obj', 'obl']:
+        if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
             ent1head = dt.nodes[ent1['starttok']]['head']
             ent2head = dt.nodes[ent2['starttok']]['head']
-            if ent1head == ent2head:
+            ent2headhead = dt.nodes.get(ent2head)['head']
+            ent2headrel= dt.nodes.get(ent2head)['rel']
+            if ent1head == ent2head or (ent2headhead == ent1head and ent2headrel == 'xcomp'):
                 pred_string = dt.nodes[ent1head]['lemma']
-                pred_index = ent1head
+                pred_index1 = ent1head
+                pred_index2 = ent2head
                 # Check if predicate is a particle verb
                 if 'compound:prt' in dt.nodes[ent1head]['deps']:
                     for prt in dt.nodes[ent1head]['deps']['compound:prt']:
                         pred_string += '_' + dt.nodes[prt]['lemma']
                 # Add modifiers to verbs
-                mods = self.get_modifiers_to_verb(dt, pred_index, [])
+                mods = self.get_modifiers_to_verb(dt, pred_index1, [])
                 for mod in mods:
                     pred_string += '.' + dt.nodes[mod]['lemma']
                 # Add prepositions
