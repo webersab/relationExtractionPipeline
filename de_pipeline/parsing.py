@@ -26,9 +26,9 @@ class UnstParser():
         self.home = self.config.get('General','home')
 
         
-    def parse(self, files):
+    def process(self, files):
         """
-        Main function
+        Main method
         """
         print('process: parse')
         # Dependency parse with the UnstableParser

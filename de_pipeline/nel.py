@@ -31,7 +31,7 @@ class Nel():
         self.home = self.config.get('General', 'home')
         
 
-    def NEL(self, files):
+    def process(self, files):
         """
         Main method
         """

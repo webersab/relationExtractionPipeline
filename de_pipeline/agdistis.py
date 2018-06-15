@@ -8,6 +8,7 @@ Handles communication with the AGDISTIS server
 # Standard
 import requests
 import copy
+from sys import platform
 
 
 class Agdistis(object):
@@ -25,6 +26,11 @@ class Agdistis(object):
             'text': 'Die Stadt <entity>Dresden</entity> liegt in <entity>Sachsen</entity>',
             'type': 'agdistis'
             } # Change type to 'candidates' to get multiple results with scores (for amiguous entities)
+        # Solution for mac OSX problem whereby requests hang with multiprocessing
+        # https://stackoverflow.com/questions/30453152/python-multiprocessing-and-requests
+        if platform == 'darwin': # OSX
+            self.session = requests.Session()
+            self.session.trust_env = False
 
     def disambiguate(self, text):
         """
@@ -33,12 +39,14 @@ class Agdistis(object):
         """
         payload = copy.copy(self.defaultAgdistisParams)
         payload['text'] = text
-        r = requests.post(self.agdistisApi, data=payload)
+        if platform == 'darwin':
+            r = self.session.post(self.agdistisApi, data=payload)
+        else:
+            r = requests.post(self.agdistisApi, data=payload)
         entities = []
         try:
             entities = r.json()
-        except ValueError as e:
-            #server failed
+        except ValueError as e:            #server failed
             entities = [{'start': 0, 'offset': 0, 'disambiguatedURL': '', 'namedEntity': ''}]
         return entities
 

@@ -68,3 +68,39 @@ def convert_unicode_to_str(data):
         return type(data)(map(convert_unicode_to_str, data))
     else:
         return data
+
+
+def write_string_list_to_file(string_list, filename):
+    """
+    Write list of strings to file, one item per line
+    """
+    with open(filename, 'w') as f:
+        for element in string_list:
+            f.write(element+'\n')
+
+
+def write_nested_string_list_to_file(string_list, filename):
+    """
+    Write nested list of strings to file, one item per line
+    Format of line: list item, index of nested list
+    """
+    with open(filename, 'w') as f:
+        for i in range(0,len(string_list)):
+            for element in string_list[i]:
+                f.write(element+'\t'+str(i)+'\n')
+
+
+def group_batches_for_parallel_processing(batchnamesfile, batchgroupsfile, cores):
+    """
+    Split batch files into groups, one group per available core
+    """
+    l = [[] for i in range(cores)]
+    counter = 0
+    with open(batchnamesfile) as f:
+        for line in f:
+            counter += 1
+            filename = line.rstrip('\n')
+            group = counter % cores
+            l[group].append(filename)
+    write_nested_string_list_to_file(l, batchgroupsfile)
+    return l

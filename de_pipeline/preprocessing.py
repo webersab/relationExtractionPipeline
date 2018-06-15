@@ -11,6 +11,7 @@ from datetime import datetime
 
 # Custom
 import udpipe_model as udp
+import helper_functions as hf
 
 
 class Preprocessor():
@@ -42,6 +43,7 @@ class Preprocessor():
         infile = self.config.get('Input', 'json_file')
         outdir = self.config.get('Preprocessor','out_dir')
         batchsize = self.config.getint('General', 'batch_size')
+        batchfile = self.home + '/' + self.config.get('General', 'batches_file')
         outfilepath = self.home+'/'+outdir
         batchcounter = 0
         batchtextlist = []
@@ -70,7 +72,8 @@ class Preprocessor():
         if batchtextlist != []:
             fname = self.write_batch_files(outfilepath, batchsize, batchtextlist, batchmaplist)
             filenames.append(fname)
-        return filenames
+        # Write list of batch file names to file:
+        hf.write_string_list_to_file(filenames,batchfile)
 
 
     def write_batch_files(self, outpath, batchsize, batchtextlist, batchmaplist):
@@ -103,8 +106,9 @@ class Preprocessor():
         return segs
                     
             
-    def udpipe(self, files):
+    def process(self, files):
         """
+        Main method
         Preprocess with UDPipe to get CoNLL format files
         """
         # Get UDPipe configurations

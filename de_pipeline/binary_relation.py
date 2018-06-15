@@ -30,8 +30,9 @@ class BinaryRelation():
         self.home = self.config.get('General', 'home')
 
         
-    def extract_binary_relations(self, files):
+    def process(self, files):
         """
+        Main method
         Extract binary relations by combining output of the dependency parser and entity linker
         """
         dicttypes = {}

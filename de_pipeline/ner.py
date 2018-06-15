@@ -33,7 +33,7 @@ class Ner():
 #        config_java(options='-xmx2G')
 
         
-    def NER(self, files):
+    def process(self, files):
         """
         Main method
         Includes a call to GermaNER which could be used as an alternative to Stanford NER
