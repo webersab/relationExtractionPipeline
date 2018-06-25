@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Standard
+import codecs
 import collections
 import simplejson as json
 from nltk.parse import DependencyGraph
@@ -104,3 +105,11 @@ def group_batches_for_parallel_processing(batchnamesfile, batchgroupsfile, cores
             l[group].append(filename)
     write_nested_string_list_to_file(l, batchgroupsfile)
     return l
+
+
+def create_files(filename_list, encoding):
+    """
+    Create empty files given specific a list of one or more specififed names
+    """
+    for filename in filename_list:
+        codecs.open(filename, 'w', encoding).close()

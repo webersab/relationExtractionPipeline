@@ -40,6 +40,14 @@ class BinaryRelation():
         common_entities = self.config.get('NEL','common_entities')
         entfilepath = self.config.get('Agdistis', 'out_dir')
         dpindir = self.config.get('UnstableParser','post_proc_out_dir')
+        # Construct output file names:
+        outdir = self.config.get('Output','out_dir')
+        humanoutfile = self.config.get('Output','human_readable_file')
+        humanoutfilename = self.home + '/' + outdir + '/' + humanoutfile
+        jsonoutfile = self.config.get('Output', 'json_file')
+        jsonoutfilename = self.home + '/' + outdir + '/' + jsonoutfile
+        # Create empty output files (to which data will be appended):
+        hf.create_files([humanoutfilename, jsonoutfilename], 'utf8')
         for f in files:
             df = self.home + '/' + dpindir + '/' + f
             # Read dependency parse
@@ -54,9 +62,9 @@ class BinaryRelation():
             jsonlist = res[1]
             dicttypes = self.update_dict_types(dicttypes, res[2])
             # Write to human readable file
-            self.write_to_human_readable_file(relations)
+            self.write_to_human_readable_file(relations, humanoutfilename)
             # Write to json format file
-            self.output_to_json(jsonlist)
+            self.output_to_json(jsonlist, jsonoutfilename)
         # Write type list to file
         self.output_type_list(dicttypes)
 
@@ -84,15 +92,13 @@ class BinaryRelation():
         return d
         
 
-    def output_to_json(self, l):
+    def output_to_json(self, l, outfilename):
         """
         Output sentence relations to JSON
         For the JSON format binary relations output file
         """
-        outdir = self.config.get('Output', 'out_dir')
-        outfile = self.config.get('Output', 'json_file')
-        json_str = '\n'.join([json.dumps(d, ensure_ascii=False).encode('utf8') for d in l])
-        with open(self.home + '/' + outdir + '/' + outfile, 'a') as f:
+        json_str = '\n'.join([json.dumps(d, ensure_ascii=False) for d in l])
+        with codecs.open(outfilename, 'a', 'utf8') as f:
             f.write(json_str + '\n')
 
 
@@ -284,15 +290,12 @@ class BinaryRelation():
         return s
 
 
-    def write_to_human_readable_file(self, r):
+    def write_to_human_readable_file(self, r, outfilename):
         """
         Write the binary relations to file
         """
-        outdir = self.config.get('Output','out_dir')
-        outfile = self.config.get('Output','human_readable_file')
-        filename = self.home + '/' + outdir + '/' + outfile
         sent_list = sorted(r.keys())
-        with codecs.open(filename, 'a', 'utf8') as f:
+        with codecs.open(outfilename, 'a', 'utf8') as f:
             for sent_no in sent_list:
                 s = 'line: ' + r[sent_no]['sentence'] + '\n'
                 for rel in r[sent_no]['relations']:
