@@ -1,21 +1,18 @@
 BINARY RELATION EXTRACTION PIPELINE FOR GERMAN
 
-This repository contains a pipeline for the extraction of binary relations from German text. It takes as input a JSON formatted corpus file (see section "INPUT DATA FORMAT") and produces two output files (binary_realtions.json and types.txt). The binary_relations.json file contains those relations that were automatically extracted from the input corpus and types.txt contains a list of FIGER types for those entities participating in the binary relations. These output files may be used independently or as the interface to the language-independent section of Javad Hosseini's pipeline, to construct entailment graphs. Both output files are described in the section "OUTPUT FORMAT".
+This repository contains a pipeline for the extraction of binary relations from German text. It takes as input a JSON formatted corpus file (see section "INPUT DATA FORMAT") and produces two output files (binary_relations.json and types.txt). The binary_relations.json file contains those relations that were automatically extracted from the input corpus and types.txt contains a list of FIGER types for those entities participating in the binary relations. These output files may be used independently or as the interface to the language-independent section of Javad Hosseini's pipeline, to construct entailment graphs. Both output files are described in the section "OUTPUT FORMAT".
 
-As of 09/04/2018 the pipeline performs the following steps:
-* Extract raw text from JSON format corpus and write each article to a separate file (main.py)
-* Sentence segmentation with NLTK (preprocessing.py)
-* Word tokenisation / CoNLL format preprocessing with UDPipe (preprocessing.py)
-* Parsing with UnstableParser (parsing.py)
-* Parser output pre-processing for German compounds using an auxialliary script for the UnstableParser (parasing.py)
-* Named entity recognition with Stanford NER + german model (ner.py)
-* Extraction of common entities (nouns in the parser output) (helper_functions.py / nel.py)
-* Named entity linking with AGDISTIS (nel.py)
-* Binary relation extraction (binary_relation.py)
+As of 25/06/2018 the pipeline performs the following steps:
+1) Extract raw text from JSON format corpus, perform sentence segmentation and create batches of articles. Write each batch to a separate file. ([preprocessing.py], this step is run as a single process.)
+2) Word tokenisation / CoNLL format preprocessing with UDPipe ([preprocessing.py], this step is run in parallel using python’s multiprocessing library.)
+3) Named entity recognition with Stanford NER + german model ([ner.py], this step is run in parallel.)
+4) Parsing with UnstableParser. Parser output post-processing for German compounds is achieved using an auxiliary script for the UnstableParser ([parsing.py], this step is run in parallel.)
+5) Common entity extraction (from parser output) and named entity linking with AGDISTIS ([nel.py], this step is run in parallel.)
+6) Binary relation extraction ([binary_relation.py], this step is run as a single process.)
 
-The installation/configuration of the external components (UDPipe, UnstableParser, Stanford NER, AGDISTIS) is described in the "REQUIRMENTS" section below.
+The installation/configuration of the external components (UDPipe, UnstableParser, Stanford NER, AGDISTIS) is described in the "REQUIREMENTS" section below.
 
-AGDISITS returns DBpedia urls for those entities that it is able to link. These are mapped to FIGER types (via Freebase) so that both the English and German pipelines use the same type system. This is necessary to align English and German relations and entailment graphs for downstream multilingual tasks such as question answering. The DBpedia to FIGER mapping file is provided as a component of the pipeline, and is described in the "REQUIREMENTS" sectionb below.
+AGDISITS returns DBPedia urls for those entities that it is able to link. These are mapped to FIGER types (via Freebase) so that both the English and German pipelines use the same type system. This is necessary to align English and German relations and entailment graphs for downstream multilingual tasks such as question answering. The DBPedia to FIGER mapping file is provided as a component of the pipeline, and is described in the "REQUIREMENTS" section below.
 
 
 REQUIREMENTS
@@ -50,7 +47,7 @@ Install and configure AGDISTIS to use the German index:
 * To test that the installation worked, try running the command:
      > curl --data-urlencode "text='<entity>Angela Merkel</entity>'" -d type='agdistis' http://<server_name>:8080/AGDISTIS
 
-Standord NER model for German and NER server:
+Stanford NER model for German and NER server:
 https://nlp.stanford.edu/software/CRF-NER.html
 https://pypi.python.org/pypi/sner/0.2.3
 Set up the NER server for German:
@@ -86,7 +83,7 @@ Run command: python scripts/DBPedia_to_FIGER.py (constructs the types.map.gz fil
 
 INSTRUCTIONS
 
-1) Ensure that the required python modules have been installed, and that the dependecies (a trained UnstableParser model, AGDISTIS, NER model, UDPipe model, DBPedia-to-figer map) are available
+1) Ensure that the required python modules have been installed, and that the dependencies (a trained UnstableParser model, AGDISTIS, NER model, UDPipe model, DBPedia-to-figer map) are available
 2) Start the AGDISTIS and NER servers
 3) Clone the german pipeline repository using the command: git clone https://<username>@bitbucket.org/lianeg/question-answering.git
 4) Set up the directory structure, run command: sh scripts/setup_dir.sh
@@ -100,7 +97,7 @@ INPUT DATA FORMAT
 
 The pipeline expects data in JSON format, with one JSON object per article.
 
-For the extraction of binary relations we have used a collection of German news articles crawled from the web by the Machine Tranlsation group at Edinburgh University, during the period 2008-2017. From this collection we have formatted a corpus following that used in the (English) Newsspike corpus [1]. This is the same format expected as input to the English pipeline developed by Javad Hosseini [0].
+For the extraction of binary relations we have used a collection of German news articles crawled from the web by the Machine Translation group at Edinburgh University, during the period 2008-2017. From this collection we have formatted a corpus following that used in the (English) Newsspike corpus [1]. This is the same format expected as input to the English pipeline developed by Javad Hosseini [0].
 
 The JSON object for each article in the German news corpus contains the following fields:
 * date - date and time that the article was crawled

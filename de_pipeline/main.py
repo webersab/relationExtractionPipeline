@@ -74,9 +74,34 @@ def process_batch_group(batch_name_list, instance_to_create):
         raise ex
 
 
+def get_pipeline_steps(config):
+    """
+    Determine whether the full pipeline / a section of it is to be run
+    Return a list of parallel steps to run, and boolean variables
+    denoting whether the serial steps (batching, relation extraction)
+    should be run.
+    """
+    steps = []
+    partial_execution = config.getboolean('General','partial_execution')
+    if partial_execution:
+        start_step = config.getint('General','start_step')
+        end_step = config.getint('General','end_step')
+    else:
+        start_step = 1
+        end_step = 6
+    # Run batching and relation extraction steps?
+    batching = True if start_step == 1 else False
+    rel_extraction = True if start_step == 6 else False
+    # Parallel pipeline steps
+    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap), parsing.UnstParser(configmap), nel.Nel(configmap)]
+    parallel_steps = parallel_step_list[max(0,start_step-2):end_step-1]
+    return parallel_steps, batching, rel_extraction
+
+
 if __name__ == "__main__":
     """
-    Calls each of the pipeline steps in sequence
+    Calls each of the pipeline steps in sequence, or a partial set of
+    steps if this is specified in the config file
     """
     # Set up logging
     logging.basicConfig(filename='pipeline.log',level=logging.DEBUG)
@@ -92,18 +117,27 @@ if __name__ == "__main__":
     unstableparserpath = configmap.get('UnstableParser','path')
     sys.path.insert(0,unstableparserpath)
     import parsing
-    # Batching and sentence segmentation
-    preprocessor = pre.Preprocessor(configmap)
-    preprocessor.batch_and_segment()
-    # Split batches into groups according to number of cores available for paralellisation
+    # Get pipeline steps for full / partial execution as specified in config
+    steps = get_pipeline_steps(configmap)
+    parallel_steps = steps[0]
+    batching = steps[1]
+    rel_extraction = steps[2]
+    # Determine number of cores to use (based on config setting and availability)
     cores = compute_cores(configmap)
+    # Batching and sentence segmentation
     homedir = configmap.get('General','home')
-    batchnamesfile = homedir + '/' + configmap.get('General','batches_file')
     batchgroupsfile = homedir + '/' + configmap.get('General','batch_groups_file')
-    batch_groups_list = hf.group_batches_for_parallel_processing(batchnamesfile, batchgroupsfile, cores)
+    if batching:
+        preprocessor = pre.Preprocessor(configmap)
+        preprocessor.batch_and_segment()
+        # Split batches into groups according to number of cores available for paralellisation
+        batchnamesfile = homedir + '/' + configmap.get('General','batches_file')
+        batch_groups_list = hf.group_batches_for_parallel_processing(batchnamesfile, batchgroupsfile, cores)
+    else:
+        # Read batch groups from file
+        batch_groups_list = hf.read_group_batches(batchgroupsfile)
     # Implement pipeline steps for which parallelisation makes sense
-    pipeline = [pre.Preprocessor(configmap), ner.Ner(configmap), parsing.UnstParser(configmap), nel.Nel(configmap)]
-    for step in pipeline:
+    for step in parallel_steps:
         # Set up a pool of workers
         pool = mp.Pool(processes=cores)
         process_batch_group_with_instance=partial(process_batch_group, instance_to_create=step)
@@ -111,8 +145,9 @@ if __name__ == "__main__":
         pool.close()
         pool.join()
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
-    batch_list = list(chain(*batch_groups_list))
-    bin_rel = binary_relation.BinaryRelation(configmap)
-    bin_rel.process(batch_list)
+    if rel_extraction:
+        batch_list = list(chain(*batch_groups_list))
+        bin_rel = binary_relation.BinaryRelation(configmap)
+        bin_rel.process(batch_list)
     # Exit
     logging.info('Finished at: '+str(datetime.now())+'\n\n')

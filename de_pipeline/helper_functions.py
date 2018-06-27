@@ -113,3 +113,23 @@ def create_files(filename_list, encoding):
     """
     for filename in filename_list:
         codecs.open(filename, 'w', encoding).close()
+
+
+def read_group_batches(filename):
+    """
+    Read batch groups file and return a list of batch groups
+    """
+    l = []
+    try:
+        with open(filename) as f:
+            for line in f:
+                elements = line.rstrip('\n').split('\t')
+                batchname = elements[0]
+                batchgroup = int(elements[1])
+                # Check if there is a nested list with index of the batchgroup
+                if len(l)-1 < batchgroup:
+                    l.append([])
+                l[batchgroup].append(batchname)
+    except IOError as e:
+        print(e)
+    return l
