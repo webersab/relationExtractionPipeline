@@ -251,14 +251,13 @@ class BinaryRelation():
             ent2headrel= dt.nodes.get(ent2head)['rel']
             if ent1head == ent2head or (ent2headhead == ent1head and ent2headrel == 'xcomp'):
                 pred_string = dt.nodes[ent1head]['lemma']
-                pred_index1 = ent1head
-                pred_index2 = ent2head
+                pred_index = ent1head
                 # Check if predicate is a particle verb
                 if 'compound:prt' in dt.nodes[ent1head]['deps']:
                     for prt in dt.nodes[ent1head]['deps']['compound:prt']:
                         pred_string += '_' + dt.nodes[prt]['lemma']
                 # Add modifiers to verbs
-                mods = self.get_modifiers_to_verb(dt, pred_index1, [])
+                mods = self.get_modifiers_to_verb(dt, pred_index, [])
                 for mod in mods:
                     pred_string += '.' + dt.nodes[mod]['lemma']
                 # Add prepositions
