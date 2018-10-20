@@ -92,8 +92,8 @@ def get_pipeline_steps(config):
     # Run batching and relation extraction steps?
     batching = True if start_step == 1 else False
     rel_extraction = True if end_step == 6 else False
-    # Parallel pipeline steps
-    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap), parsing.UnstParser(configmap), nel.Nel(configmap)]
+    # Parallel pipeline steps, removed parsing.UnstParser(configmap) from list
+    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap), nel.Nel(configmap)]
     parallel_steps = parallel_step_list[max(0,start_step-2):end_step-1]
     return parallel_steps, batching, rel_extraction
 

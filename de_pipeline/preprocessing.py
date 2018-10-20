@@ -88,7 +88,7 @@ class Preprocessor():
             ofile.write('\n'.join(batchtextlist)+'\n')
         # Write batch mapping file
         with open(outpath+'/'+batchmapfilename, 'w') as ofile:
-            ofile.write('\n'.join(batchmaplist)+'\n')
+            ofile.write('\n'.join(str(x) for x in batchmaplist)+'\n')
         return batchtextfilename
 
         
