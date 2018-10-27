@@ -16,7 +16,7 @@ from itertools import izip
 # Custom
 import helper_functions as hf
 from agdistis import Agdistis
-
+from datetime import datetime
 
 class Nel():
 
@@ -36,10 +36,12 @@ class Nel():
         Main method
         """
         print('NER and parsing complete\nNamed Entity Linking')
+        logging.info('started NEL: '+str(datetime.now()))
         # Extract nouns
         self.detect_nouns(files)
         # Apply NEL using Agdistis
         self.agdistis(files)
+        logging.info('ended NEL: '+str(datetime.now()))
         
 
     def detect_nouns(self, files):

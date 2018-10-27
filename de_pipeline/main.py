@@ -126,7 +126,8 @@ if __name__ == "__main__":
     cores = compute_cores(configmap)
     # Batching and sentence segmentation
     homedir = configmap.get('General','home')
-    batchgroupsfile = homedir + '/' + configmap.get('General','batch_groups_file')
+    batchgroupsfile = homedir + '/' + configmap.get('General','batch_groups_file') 
+    logging.info('started batching: '+str(datetime.now()))
     if batching:
         preprocessor = pre.Preprocessor(configmap)
         preprocessor.batch_and_segment()

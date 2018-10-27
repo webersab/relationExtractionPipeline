@@ -38,6 +38,7 @@ class Preprocessor():
             * a file containing the lines from all articles in the bacth
             * a mapping file that lists the article ID corresponding to each line
         """
+        logging.info('in batch and segment: '+str(datetime.now()))
         filenames = []
         indir = self.config.get('Input','json_dir')
         infile = self.config.get('Input', 'json_file')
@@ -49,6 +50,7 @@ class Preprocessor():
         batchtextlist = []
         batchmaplist = []
         with open(self.home+'/'+indir+'/'+infile, 'r') as ifile:
+            logging.info('started loop that goes trough infile: '+str(datetime.now()))
             for line in ifile:
                 batchcounter += 1
                 # Extract JSON object
@@ -61,6 +63,7 @@ class Preprocessor():
                 batchtextlist += segtextlist
                 articlelinecount = len(segtextlist)
                 batchmaplist += [articleid]*articlelinecount
+                logging.info('add stuff to be written in batchfile: '+str(datetime.now())+' articelId:'+str(articleid))
                 # Write batches
                 if batchcounter == batchsize:
                     fname = self.write_batch_files(outfilepath, batchsize, batchtextlist, batchmaplist)
@@ -68,12 +71,15 @@ class Preprocessor():
                     batchtextlist = []
                     batchmaplist = []
                     filenames.append(fname)
+                    logging.info('written batches: '+str(datetime.now()))
         # Write final batch (remainder of articles)
         if batchtextlist != []:
             fname = self.write_batch_files(outfilepath, batchsize, batchtextlist, batchmaplist)
             filenames.append(fname)
+            logging.info('written final batches: '+str(datetime.now()))
         # Write list of batch file names to file:
         hf.write_string_list_to_file(filenames,batchfile)
+        logging.info('written names of batches to file: '+str(datetime.now()))
 
 
     def write_batch_files(self, outpath, batchsize, batchtextlist, batchmaplist):
