@@ -103,6 +103,7 @@ if __name__ == "__main__":
     Calls each of the pipeline steps in sequence, or a partial set of
     steps if this is specified in the config file
     """
+    print("HUPHUP")
     # Set up logging
     logging.basicConfig(filename='pipeline.log',level=logging.DEBUG)
     logging.info('Started at: '+str(datetime.now()))

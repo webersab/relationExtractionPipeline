@@ -39,12 +39,14 @@ class Ner():
         Includes a call to GermaNER which could be used as an alternative to Stanford NER
         """
         print('process: NER')
+        logging.info('started NER: '+str(datetime.now()))
         # Format file with one token per line (take tokenisation from UDPipe)
         self.pre_process_ner(files)
         # Apply NER using GermaNER - not currently used but could be an alternative
         # GermaNER(configmap)
         # Apply NER using Stanford NER - currently in use
         self.StanfordNER(files)
+        logging.info('ended NER: '+str(datetime.now()))
         
 
     def pre_process_ner(self, files):
