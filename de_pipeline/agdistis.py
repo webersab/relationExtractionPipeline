@@ -41,7 +41,7 @@ class Agdistis(object):
         payload['text'] = text
         if platform == 'darwin':
             r = self.session.post(self.agdistisApi, data=payload)
-        else:
+        else:	
             r = requests.post(self.agdistisApi, data=payload)
         entities = []
         try:
