@@ -146,6 +146,7 @@ if __name__ == "__main__":
         pool.map(process_batch_group_with_instance, batch_groups_list)
         pool.close()
         pool.join()
+        pool.terminate()
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
     if rel_extraction:
         batch_list = list(chain(*batch_groups_list))
