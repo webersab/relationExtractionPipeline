@@ -150,6 +150,7 @@ if __name__ == "__main__":
         pool.join()
         pool.terminate()
     # Try and do nel with 5 threads only
+    """
     if nel:
         batch_list = list(chain(*batch_groups_list))
         nell=nel.Nel(configmap)
@@ -161,8 +162,9 @@ if __name__ == "__main__":
         pool.close()
         pool.join()
         pool.terminate()
+    """
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
-    elif rel_extraction:
+    if rel_extraction:
         batch_list = list(chain(*batch_groups_list))
         bin_rel = binary_relation.BinaryRelation(configmap)
         bin_rel.process(batch_list)
