@@ -148,11 +148,18 @@ if __name__ == "__main__":
         pool.close()
         pool.join()
         pool.terminate()
-    # Try and do nel NOT in parallel
+    # Try and do nel with 5 threads only
     if nel:
         batch_list = list(chain(*batch_groups_list))
-        nel=nel.Nel(configmap)
-        nel.process(batch_list)
+        nell=nel.Nel(configmap)
+        #nel.process(batch_list)
+        newChunks = [batch_list[i::5] for i in xrange(5)]
+        pool = mp.Pool(processes=cores)
+        process_batch_group_with_instance=partial(process_batch_group, instance_to_create=nell)
+        pool.map(process_batch_group_with_instance, newChunks)
+        pool.close()
+        pool.join()
+        pool.terminate()
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
     elif rel_extraction:
         batch_list = list(chain(*batch_groups_list))
