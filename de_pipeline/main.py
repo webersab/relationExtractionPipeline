@@ -92,8 +92,9 @@ def get_pipeline_steps(config):
     # Run batching and relation extraction steps?
     batching = True if start_step == 1 else False
     rel_extraction = True if end_step == 6 else False
-    # Parallel pipeline steps, removed parsing.UnstParser(configmap) from list
-    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap), nel.Nel(configmap)]
+    nel = True if start_step<=4 and end_step>4 else False
+    # Parallel pipeline steps, removed parsing.UnstParser(configmap) from list, removed nel.Nel(configmap) from parallel
+    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap)]
     parallel_steps = parallel_step_list[max(0,start_step-2):end_step-1]
     return parallel_steps, batching, rel_extraction
 
@@ -148,8 +149,13 @@ if __name__ == "__main__":
         pool.close()
         pool.join()
         pool.terminate()
+    # Try and do nel NOT in parallel
+    if nel:
+        batch_list = list(chain(*batch_groups_list))
+        nel=nel.Nel(configmap)
+        nel.process(batch_list)
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
-    if rel_extraction:
+    elif rel_extraction:
         batch_list = list(chain(*batch_groups_list))
         bin_rel = binary_relation.BinaryRelation(configmap)
         bin_rel.process(batch_list)

@@ -44,6 +44,10 @@ class Agdistis(object):
             r = self.session.post(self.agdistisApi, data=payload)
         else:	
             r = requests.post(self.agdistisApi, data=payload)
+<<<<<<< HEAD
+=======
+            #time.sleep(1)
+>>>>>>> 3bfdcefc2e003918e374f654462ddd7ad8127942
         entities = []
         try:
             entities = r.json()

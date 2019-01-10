@@ -53,6 +53,7 @@ class Nel():
         indir = self.config.get('UnstableParser','post_proc_out_dir')
         outdir = self.config.get('Entities','out_dir')
         for f in files:
+            print("getting nouns from "+str(f))
             infile = self.home + '/' + indir + '/' + f
             dtrees = hf.dependency_parse_to_graph(infile)
             tagged_sents = hf.extract_entities_from_dependency_parse(dtrees, 'NOUN')
