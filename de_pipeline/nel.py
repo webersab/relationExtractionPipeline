@@ -41,6 +41,7 @@ class Nel():
         self.detect_nouns(files)
         # Apply NEL using Agdistis
         self.agdistis(files)
+        print(str(files))
         logging.info('ended NEL: '+str(datetime.now()))
         
 

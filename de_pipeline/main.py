@@ -139,6 +139,7 @@ if __name__ == "__main__":
     else:
         # Read batch groups from file
         batch_groups_list = hf.read_group_batches(batchgroupsfile)
+        print(batch_groups_list)
     # Implement pipeline steps for which parallelisation makes sense
     for step in parallel_steps:
         # Set up a pool of workers
