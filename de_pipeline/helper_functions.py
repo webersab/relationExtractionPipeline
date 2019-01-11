@@ -41,10 +41,7 @@ def extract_entities_from_dependency_parse(dtrees, postag):
             if node_index != 0:
                 node = dtrees[x].nodes[node_index]
                 if node['ctag'] == postag:
-                    #tok_list.append((node['word'],postag))
-                    #This is a terrible dirty hack to stupidly solve a problem,
-                    #please dont do this at home, kids!
-                    tok_list.append((node['word'],'O'))
+                    tok_list.append((node['word'],postag))
                 else:
                     tok_list.append((node['word'],'O'))
         sents.append(tok_list)
