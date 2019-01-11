@@ -259,7 +259,7 @@ class Nel():
             for sent in range(0,len(formatted_sents)):
                 if '<entity>' in formatted_sents[sent]:
                     disambig = ag.disambiguate(formatted_sents[sent])
-                    print(disambig)
+                    # disambig = list with entries "{u'start': 82, u'disambiguatedURL': u'http://de.dbpedia.org/resource/Heckklappe', u'namedEntity': u'Heckdeckel', u'offset': 10}"
                 # For each sentence, map entities to Freebase, convert to dictionary
                     converted = self.map_and_convert_nel(sent, formatted_sents[sent], disambig, type_map, ent_map[sent])
                     nel["sentences"][sent] = converted
@@ -313,4 +313,5 @@ class Nel():
                 e["namedEntity"] = string_value
             conv_nel["entities"][counter] = e
             counter += 1
+            print(conv_nel)
         return conv_nel
