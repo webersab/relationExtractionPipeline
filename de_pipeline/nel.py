@@ -259,7 +259,7 @@ class Nel():
             for sent in range(0,len(formatted_sents)):
                 if '<entity>' in formatted_sents[sent]:
                     disambig = ag.disambiguate(formatted_sents[sent])
-                    print(disambig)
+                    print("hewwo!")
                 # For each sentence, map entities to Freebase, convert to dictionary
                     converted = self.map_and_convert_nel(sent, formatted_sents[sent], disambig, type_map, ent_map[sent])
                     nel["sentences"][sent] = converted
