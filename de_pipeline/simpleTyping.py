@@ -84,9 +84,9 @@ class SimpleTyping():
             ent_map = temp[1]
             #print("-----------------------------Formatted--------------------")
             #print(formatted)
-            #print("-----------------------ent map----------------------------")
-            #pp = pprint.PrettyPrinter(indent=4)
-            #pp.pprint(ent_map)
+            print("-----------------------ent map----------------------------")
+            pps = pprint.PrettyPrinter(indent=4)
+            pps.pprint(ent_map)
             #typing information needs to be added to this map before we can print it
             outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]
             with io.open(outfilename, 'w', encoding='utf8') as outfile:
