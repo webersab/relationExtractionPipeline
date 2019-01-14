@@ -157,5 +157,42 @@ class SimpleTyping():
             else:
                 tagged.append(ner_tagged[t])
         return tagged   
+
+    def create_map_entities(self, tagged):
+        """
+        Create a mapping for NEs and common entities
+        """
+        m = {}
+        prev_tag = '0'
+        ent_list = []
+        entpresent = False
+        start = 0
+        for t in range(0,len(tagged)):
+            token = tagged[t][0]
+            tag = tagged[t][1]
+            if tag != prev_tag:
+                if entpresent:
+                    if tag != '0':
+                        ent_string = ' '.join(ent_list)
+                        m[start+1] = (ent_string, prev_tag)
+                        ent_list = [token]
+                        entpresent = True
+                        start = t
+                    else:
+                        ent_string = ' '.join(ent_list)
+                        m[start+1] = (ent_string, prev_tag)
+                        ent_list = []
+                        entpresent = False
+                else:
+                    ent_list = [token]
+                    entpresent = True
+                    start = t
+            elif tag == prev_tag and entpresent:
+                ent_list.append(token)
+            prev_tag = tag
+        if entpresent:
+            ent_string = ' '.join(ent_list)
+            m[start+1] = (ent_string, prev_tag)
+        return m
         
         
