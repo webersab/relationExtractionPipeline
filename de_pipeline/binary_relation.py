@@ -12,6 +12,7 @@ import json
 from itertools import chain
 from itertools import product
 from collections import OrderedDict
+import pprint
 
 # Custom
 import helper_functions as hf
@@ -56,7 +57,9 @@ class BinaryRelation():
             filenamestem = df.split('/')[-1]#.split('.')[0]
             ef = self.home+'/'+entfilepath+'/'+filenamestem#+'.json'
             entities = hf.read_json(ef)
-            print(entities)
+            print("------------------------------------------")
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(entities)
             # Extract binary relations
             res = self.extract(dtree, entities, f)
             relations = res[0]
