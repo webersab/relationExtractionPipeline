@@ -12,6 +12,7 @@ import logging
 import subprocess
 import simplejson as json
 from itertools import izip
+import pprint
 
 # Custom
 import helper_functions as hf
@@ -81,9 +82,12 @@ class SimpleTyping():
             temp = self.format_nel_sentences(nf, ef)
             formatted = temp[0]
             ent_map = temp[1]
+            print("-----------------------------Formatted--------------------")
             print(formatted)
-            print(ent_map)
-    
+            print("-----------------------ent map----------------------------")
+            pp = pprint.PrettyPrinter(indent=4)
+            pp.pprint(ent_map)
+
     
     def format_nel_sentences(self, nerfile, entfile):
         """
