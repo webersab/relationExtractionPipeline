@@ -99,8 +99,7 @@ class SimpleTyping():
             ent_tagged = ent_sents[x][2]
             # Detect overlaps and merge NEs and common entities
             tagged = self.merge_entities(ner_tagged, ent_tagged)
-            # Output a formatted sentence
-            sentences.append((x,entity,formatted_sent))
+            sentences.append((x,entity,tagged))
             # Create a mapping so that NEs and common entities can be identified later
             ent_map[x] = self.create_map_entities(tagged)
         return (sentences, ent_map)
