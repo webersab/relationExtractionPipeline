@@ -37,6 +37,7 @@ import helper_functions as hf
 import ner
 import nel
 import binary_relation
+import simpleTyping
 
 
 def get_config(configfile):
@@ -93,8 +94,8 @@ def get_pipeline_steps(config):
     batching = True if start_step == 1 else False
     rel_extraction = True if end_step == 6 else False
     #nel = True if start_step<=4 and end_step>4 else False
-    # Parallel pipeline steps, removed parsing.UnstParser(configmap) from list, 
-    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap),nel.Nel(configmap)]
+    # Parallel pipeline steps, removed parsing.UnstParser(configmap) from list, removed nel.Nel(configmap) from list
+    parallel_step_list = [pre.Preprocessor(configmap), ner.Ner(configmap),simpleTyping.SimpleTyping(configmap)]
     parallel_steps = parallel_step_list[max(0,start_step-2):end_step-1]
     return parallel_steps, batching, rel_extraction
 
