@@ -313,5 +313,4 @@ class Nel():
                 e["namedEntity"] = string_value
             conv_nel["entities"][counter] = e
             counter += 1
-            print(conv_nel)
         return conv_nel

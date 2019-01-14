@@ -56,6 +56,7 @@ class BinaryRelation():
             filenamestem = df.split('/')[-1]#.split('.')[0]
             ef = self.home+'/'+entfilepath+'/'+filenamestem#+'.json'
             entities = hf.read_json(ef)
+            print(entities)
             # Extract binary relations
             res = self.extract(dtree, entities, f)
             relations = res[0]
