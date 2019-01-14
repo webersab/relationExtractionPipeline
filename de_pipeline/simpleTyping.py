@@ -82,11 +82,16 @@ class SimpleTyping():
             temp = self.format_nel_sentences(nf, ef)
             formatted = temp[0]
             ent_map = temp[1]
-            print("-----------------------------Formatted--------------------")
-            print(formatted)
-            print("-----------------------ent map----------------------------")
-            pp = pprint.PrettyPrinter(indent=4)
-            pp.pprint(ent_map)
+            #print("-----------------------------Formatted--------------------")
+            #print(formatted)
+            #print("-----------------------ent map----------------------------")
+            #pp = pprint.PrettyPrinter(indent=4)
+            #pp.pprint(ent_map)
+            #typing information needs to be added to this map before we can print it
+            outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]
+            with io.open(outfilename, 'w', encoding='utf8') as outfile:
+                data = json.dumps(ent_map, ensure_ascii=False)
+                outfile.write(unicode(data))
 
     
     def format_nel_sentences(self, nerfile, entfile):
@@ -130,6 +135,11 @@ class SimpleTyping():
                     prev_tag = 'O'
                 else:
                     toks = line.rstrip('\n').split('\t')
+                    #Print
+                    print("toks")
+                    pp = pprint.PrettyPrinter(indent=4)
+                    pp.pprint(toks)
+                    # print end
                     if toks[1] == 'O': # Not part of an entity
                         tagged_sent.append((toks[0],str(0)))
                     else: # Part of an entity
