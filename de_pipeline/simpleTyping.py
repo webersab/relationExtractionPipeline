@@ -135,18 +135,14 @@ class SimpleTyping():
                     prev_tag = 'O'
                 else:
                     toks = line.rstrip('\n').split('\t')
-                    #Print
-                    print("toks")
-                    pp = pprint.PrettyPrinter(indent=4)
-                    pp.pprint(toks)
-                    # print end
                     if toks[1] == 'O': # Not part of an entity
                         tagged_sent.append((toks[0],str(0)))
                     else: # Part of an entity
                         entity = True
                         if prev_tag == 'O' or toks[1][0] == 'B' or ('-' in prev_tag and '-' in toks[1] and prev_tag.split('-')[1] != toks[1].split('-')[1]): # Part of a NEW entity
                             ent_counter += 1
-                        tagged_sent.append((toks[0],label+str(ent_counter)))
+                        #tagged_sent.append((toks[0],label+str(ent_counter)))
+                        tagged_sent.append((toks[0],toks[1]))
                     prev_tag = toks[1]
         return sentences
 
