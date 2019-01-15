@@ -121,8 +121,10 @@ class BinaryRelation():
                 ent2string = r[1]['namedEntity'].replace(' ', '_')
             else:
                 ent2string = r[1]['disambiguatedURL'].split('/')[-1]
-            ent1figer = '#thing' if r[0]['FIGERType'] == 'none' else '#'+r[0]['FIGERType'].split('/')[1]
-            ent2figer = '#thing' if r[1]['FIGERType'] == 'none' else '#'+r[1]['FIGERType'].split('/')[1]
+            #ent1figer = '#thing' if r[0]['FIGERType'] == 'none' else '#'+r[0]['FIGERType'].split('/')[1]
+            ent1figer = r[0]['FIGERType']
+            #ent2figer = '#thing' if r[1]['FIGERType'] == 'none' else '#'+r[1]['FIGERType'].split('/')[1]
+            ent2figer = r[1]['FIGERType']
             neg = 'NEG__' if r[3] else ''
             predicate = r[2].split('.')[0] + '.1,' + r[2] + '.2'
             s = u'({}({})::{}::{}::{}::{}::{}{}::{}::{})'.format(neg, predicate, ent1string, ent2string,
