@@ -269,8 +269,9 @@ class BinaryRelation():
         passive = False
         print("dt nodes: ",dt.nodes)
         print("ent1['starttok']",ent1['starttok'])
-        ent1rel = dt.nodes[ent1['starttok']]['rel']
-        ent2rel = dt.nodes[ent2['starttok']]['rel']
+        ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
+        ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
+        print("rel",ent1rel)
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
