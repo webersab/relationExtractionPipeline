@@ -275,8 +275,8 @@ class BinaryRelation():
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
-            ent1head = dt.nodes[ent1['starttok']]['head']
-            ent2head = dt.nodes[ent2['starttok']]['head']
+            ent1head = dt.nodes[int(ent1['starttok'])]['head']
+            ent2head = dt.nodes[int(ent2['starttok'])]['head']
             ent2headhead = dt.nodes.get(ent2head)['head']
             ent2headrel= dt.nodes.get(ent2head)['rel']
             if ent1head == ent2head or (ent2headhead == ent1head and ent2headrel == 'xcomp'):
