@@ -150,7 +150,7 @@ class BinaryRelation():
             entities = self.fill_entities(entities)
             # Get relations
             r = self.get_relations(dpsenttree, entities)
-            print("Relations: ",r)
+            print("Relations: ")
             # JSON format information
             res = self.format_json_relations(r)
             dictsentrels['s'] = sentstring
@@ -168,8 +168,8 @@ class BinaryRelation():
         counter=0
         for k, v in entities.iteritems():
             starttok=k 
-            namedEntity=v[1]
-            FIGERType=v[0]
+            namedEntity=v[0]
+            FIGERType=v[1]
             entityType=self.get_entity_type(FIGERType)
             disambiguatedURL=namedEntity
             internalMap={"starttok":starttok,
