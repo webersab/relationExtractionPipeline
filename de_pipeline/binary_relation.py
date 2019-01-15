@@ -152,7 +152,6 @@ class BinaryRelation():
             entities = self.fill_entities(entities)
             # Get relations
             r = self.get_relations(dpsenttree, entities)
-            print("Relations: ",r)
             # JSON format information
             res = self.format_json_relations(r)
             dictsentrels['s'] = sentstring
@@ -269,11 +268,8 @@ class BinaryRelation():
         pred_string = ''
         pred_index = -1
         passive = False
-        print("dt nodes: ",dt.nodes)
-        print("ent1['starttok']",ent1['starttok'])
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
-        print("rel",ent1rel)
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
@@ -313,9 +309,9 @@ class BinaryRelation():
         else:
             ent2string = ent2['disambiguatedURL'].split('/')[-1]
         #ent1figer = '#thing' if ent1['FIGERType'] == 'none' else '#'+ent1['FIGERType'].split('/')[1]
-        ent1figer=ent1['FIGERType']
+        ent1figer='#'+ent1['FIGERType']
         #ent2figer = '#thing' if ent2['FIGERType'] == 'none' else '#'+ent2['FIGERType'].split('/')[1]
-        ent2figer=ent2['FIGERType']
+        ent2figer='#'+ent2['FIGERType']
         negation = 'NEG__' if neg else ''
         predicate = pred + '.1,' + pred + '.2'
         s = u'{}({}){}{}::{}::{}|||(passive: {})'.format(negation, predicate, ent1figer, ent2figer,
