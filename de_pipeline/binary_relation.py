@@ -215,9 +215,10 @@ class BinaryRelation():
         ent_list = ent.keys()
         # For every pair of entities:
         for pair in product(ent_list, repeat=2):
-            ent1 = ent[pair[0]]
-            ent2 = ent[pair[1]]
-            if ent1['entityType'] == 'com' and ent2['entityType'] == 'com':
+            #I need to pas both key and value here, because the key is the starttoken number
+            ent1 = (pair[0],ent[pair[0]])
+            ent2 = (pair[1],ent[pair[1]])
+            if ent1[1][1] == 'NOUN' and ent2[1][1] == 'NOUN':
                 valid_combination = False
             else:
                 valid_combination = True
