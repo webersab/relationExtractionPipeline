@@ -147,8 +147,7 @@ class BinaryRelation():
             dpsenttree = dt[int(sent)]
             sentstring = self.get_sentence(dpsenttree)
             entities = ent[sent]
-            print("ENTITIES")
-            print(entities)
+            entities = self.fill_entities(entities)
             # Get relations
             r = self.get_relations(dpsenttree, entities)
             # JSON format information
@@ -162,7 +161,30 @@ class BinaryRelation():
             listsentrels.append(dictsentrels)
             rels[sent] = {'sentence': sentstring, 'relations': r}
         return (rels, listsentrels, listtypes)
-
+    
+    def fill_entities(self,entities):
+        entitiesMap={}
+        conter=0
+        for k, v in entities.iteritems():
+            starttok=k 
+            namedEntity=v[1]
+            FIGERType=v[0]
+            entityType=self.get_entity_type(FIGERType)
+            disambiguatedURL=namedEntity
+            internalMap={"starttok":starttok,
+                         "namedEntity":namedEntity,
+                         "FIGERType":FIGERType,
+                         "entityType":entityType,
+                         "disambiguatedURL":disambiguatedURL}
+            entitiesMap[counter]=internalMap
+            counter+=1
+        return entitiesMap
+    
+    def get_entity_type(self,typ):
+        if typ == 'NOUN':
+            return 'com'
+        else:
+            return 'ner'
 
     def get_sentence(self, dt):
         """
@@ -215,10 +237,9 @@ class BinaryRelation():
         ent_list = ent.keys()
         # For every pair of entities:
         for pair in product(ent_list, repeat=2):
-            #I need to pas both key and value here, because the key is the starttoken number
-            ent1 = (pair[0],ent[pair[0]])
-            ent2 = (pair[1],ent[pair[1]])
-            if ent1[1][1] == 'NOUN' and ent2[1][1] == 'NOUN':
+            ent1 = ent[pair[0]]
+            ent2 = ent[pair[1]]
+            if ent1['entityType'] == 'com' and ent2['entityType'] == 'com':
                 valid_combination = False
             else:
                 valid_combination = True
@@ -244,9 +265,8 @@ class BinaryRelation():
         pred_string = ''
         pred_index = -1
         passive = False
-        ent1rel = dt.nodes[ent1[0]]['rel']
-        ent2rel = dt.nodes[ent2[0]]['rel']
-        print("entrel",ent1rel, ent2rel)
+        ent1rel = dt.nodes[ent1['starttok']]['rel']
+        ent2rel = dt.nodes[ent2['starttok']]['rel']
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
