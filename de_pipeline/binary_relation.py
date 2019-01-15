@@ -218,6 +218,7 @@ class BinaryRelation():
             #I need to pas both key and value here, because the key is the starttoken number
             ent1 = (pair[0],ent[pair[0]])
             ent2 = (pair[1],ent[pair[1]])
+            print("ent1,ent2",ent1,ent2)
             if ent1[1][1] == 'NOUN' and ent2[1][1] == 'NOUN':
                 valid_combination = False
             else:
