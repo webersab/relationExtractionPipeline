@@ -150,6 +150,7 @@ class BinaryRelation():
             entities = self.fill_entities(entities)
             # Get relations
             r = self.get_relations(dpsenttree, entities)
+            print("Relations: ",r)
             # JSON format information
             res = self.format_json_relations(r)
             dictsentrels['s'] = sentstring
@@ -178,6 +179,8 @@ class BinaryRelation():
                          "disambiguatedURL":disambiguatedURL}
             entitiesMap[counter]=internalMap
             counter+=1
+        pps = pprint.PrettyPrinter(indent=4)
+        pps.pprint(entitiesMap)
         return entitiesMap
     
     def get_entity_type(self,typ):
