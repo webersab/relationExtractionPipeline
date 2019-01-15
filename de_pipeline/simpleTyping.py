@@ -82,11 +82,9 @@ class SimpleTyping():
             temp = self.format_nel_sentences(nf, ef)
             formatted = temp[0]
             ent_map = temp[1]
-            #print("-----------------------------Formatted--------------------")
-            #print(formatted)
-            print("-----------------------ent map----------------------------")
-            pps = pprint.PrettyPrinter(indent=4)
-            pps.pprint(ent_map)
+            #print("-----------------------ent map----------------------------")
+            #pps = pprint.PrettyPrinter(indent=4)
+            #pps.pprint(ent_map)
             #typing information needs to be added to this map before we can print it
             outfilename = self.home + '/' + outdir + '/' + nf.split('/')[-1]
             with io.open(outfilename, 'w', encoding='utf8') as outfile:
@@ -142,6 +140,7 @@ class SimpleTyping():
                         if prev_tag == 'O' or toks[1][0] == 'B' or ('-' in prev_tag and '-' in toks[1] and prev_tag.split('-')[1] != toks[1].split('-')[1]): # Part of a NEW entity
                             ent_counter += 1
                         #tagged_sent.append((toks[0],label+str(ent_counter)))
+                        #The tags get included here. Insert function the disambiguate nouns using GermaNet
                         tagged_sent.append((toks[0],toks[1]))
                     prev_tag = toks[1]
         return sentences

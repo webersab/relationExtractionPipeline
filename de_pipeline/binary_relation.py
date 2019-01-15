@@ -38,8 +38,8 @@ class BinaryRelation():
         """
         dicttypes = {}
         print('process: Extract binary relations')
-        common_entities = self.config.get('NEL','common_entities')
-        entfilepath = self.config.get('Agdistis', 'out_dir')
+        #common_entities = self.config.get('NEL','common_entities')
+        entfilepath = self.config.get('SimpleType', 'out_dir')
         dpindir = self.config.get('UnstableParser','post_proc_out_dir')
         # Construct output file names:
         outdir = self.config.get('Output','out_dir')
@@ -140,13 +140,15 @@ class BinaryRelation():
         rels = {}
         listsentrels = []
         listtypes = []
-        sentlist = ent['sentences'].keys()
+        sentlist = ent.keys()
         sentlist.sort()
         for sent in sentlist:
             dictsentrels = OrderedDict()
             dpsenttree = dt[int(sent)]
             sentstring = self.get_sentence(dpsenttree)
-            entities = ent['sentences'][sent]['entities']
+            entities = ent[sent]
+            print("ENTITIES")
+            print(entities)
             # Get relations
             r = self.get_relations(dpsenttree, entities)
             # JSON format information
