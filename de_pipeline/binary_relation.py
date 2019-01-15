@@ -164,7 +164,7 @@ class BinaryRelation():
     
     def fill_entities(self,entities):
         entitiesMap={}
-        conter=0
+        counter=0
         for k, v in entities.iteritems():
             starttok=k 
             namedEntity=v[1]
