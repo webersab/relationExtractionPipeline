@@ -179,8 +179,6 @@ class BinaryRelation():
                          "disambiguatedURL":disambiguatedURL}
             entitiesMap[counter]=internalMap
             counter+=1
-        pps = pprint.PrettyPrinter(indent=4)
-        pps.pprint(entitiesMap)
         return entitiesMap
     
     def get_entity_type(self,typ):
@@ -247,6 +245,7 @@ class BinaryRelation():
             else:
                 valid_combination = True
             if pair[0] != pair[1] and valid_combination:
+                ("ent1, ent2 before get predicate: ",ent1,ent2)
                 pred = self.get_predicate(dt, ent1, ent2)
                 pred_string = pred[0]
                 pred_index = pred[1]
@@ -270,6 +269,7 @@ class BinaryRelation():
         passive = False
         ent1rel = dt.nodes[ent1['starttok']]['rel']
         ent2rel = dt.nodes[ent2['starttok']]['rel']
+        print("ent1rel, ent2rel: ",ent1,ent2rel)
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
