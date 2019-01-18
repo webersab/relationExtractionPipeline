@@ -15,16 +15,17 @@ if __name__ == "__main__":
                 for line in old_file:
                     if "json_file = " in line and not setJsonfile:
                         print("found first place to change")
-                        new_file.write(re.sub("json_file = *", "json_file = "+filename, line))
-                        print("Wrote: ",re.sub("json_file = *", "json_file = "+filename, line))
+                        replacement="json_file = "+filename+"\\n"
+                        new_file.write(re.sub("json_file = *", replacement , line))
+                        print("Wrote: ",re.sub("json_file = *", replacement, line))
                         setJsonfile=True
                     elif "human_readable_file = binary_relations_" in line:
                         print("found second place to change")
-                        new_file.write(re.sub("human_readable_file = binary_relations_*", "human_readable_file = binary_relations_"+filename+".txt\\n", line))
-                        print(re.sub("human_readable_file = binary_relations_*", "human_readable_file = binary_relations_"+filename+".txt\\n", line))
+                        replacement2="human_readable_file = binary_relations_"+filename+".txt\\n"
+                        new_file.write(re.sub("human_readable_file = binary_relations_*",replacement2 , line))
+                        print("Wrote: ",re.sub("human_readable_file = binary_relations_*", replacement2, line))
                     else:
                         new_file.write(line)
-                        print("write other line")
         remove('config.ini')
         move(abs_path, 'config.ini')
         #run "python main.py config.ini"
