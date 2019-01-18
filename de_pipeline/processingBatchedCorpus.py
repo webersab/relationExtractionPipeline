@@ -11,10 +11,10 @@ if __name__ == "__main__":
         with fdopen(fh,'w') as new_file:
             with open('config.ini') as old_file:
                 for line in old_file:
-                    if line.contains("json_file = ") and not setJsonfile:
+                    if "json_file = " in line and not setJsonfile:
                         new_file.write(line.replace("json_file = *", "json_file = "+filename))
                         setJsonfile=True
-                    elif line.contains("human_readable_file = binary_relations_"):
+                    elif "human_readable_file = binary_relations_" in line:
                         new_file.write(line.replace("human_readable_file = binary_relations_*", "human_readable_file = binary_relations_"+filename+".txt"))
                     else:
                         new_file.write(line)
