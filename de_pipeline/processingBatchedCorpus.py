@@ -18,8 +18,8 @@ if __name__ == "__main__":
                         new_file.write(line.replace("human_readable_file = binary_relations_*", "human_readable_file = binary_relations_"+filename+".txt"))
                     else:
                         new_file.write(line)
-        remove(file_path)
-        move(abs_path, file_path)
+        remove('config.ini')
+        move(abs_path, 'config.ini')
         #run "python main.py config.ini"
         os.system("python main.py config.ini")  
         
