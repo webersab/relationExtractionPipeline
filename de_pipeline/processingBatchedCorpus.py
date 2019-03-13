@@ -5,7 +5,7 @@ from os import fdopen, remove
 import re
 
 if __name__ == "__main__":
-    for filename in os.listdir("/disk/scratch/sweber/german-pipeline/datasets/news-crawl-deduplicated/segmentsOfCrawlbatched_de"):
+    for filename in os.listdir("/disk/scratch/sweber/relationExtractionPipeline/00-json-input"):
         print("Processing batch file "+filename)
         #mofidy input and output files in config.ini
         fh, abs_path = mkstemp()
