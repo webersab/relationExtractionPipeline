@@ -167,7 +167,7 @@ if __name__ == "__main__":
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
     if rel_extraction:
         batch_list = list(chain(*batch_groups_list))
-        bin_rel = binary_relation.BinaryRelation(configmap)
+        bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
         bin_rel.process(batch_list)
     # Exit
     logging.info('Finished at: '+str(datetime.now())+'\n\n')
