@@ -5,8 +5,8 @@ from os import fdopen, remove
 import re
 
 if __name__ == "__main__":
-    #for filename in os.listdir("/disk/scratch/sweber/german-pipeline/datasets/news-crawl-deduplicated/segmentsOfCrawlbatched_de"):
-    for filename in range(10):
+    for filename in os.listdir("/disk/scratch/sweber/german-pipeline/datasets/news-crawl-deduplicated/segmentsOfCrawlbatched_de"):
+    #for filename in range(10):
         print("Processing batch file "+str(filename))
         #mofidy input and output files in config.ini
         fh, abs_path = mkstemp()
@@ -29,6 +29,6 @@ if __name__ == "__main__":
                         new_file.write(line)
         remove('config.ini')
         move(abs_path, 'config.ini')
-        #run "python main.py config.ini"
+        run "python main.py config.ini"
         #os.system("python main.py config.ini")  
   
