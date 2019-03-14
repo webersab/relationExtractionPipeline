@@ -29,6 +29,6 @@ if __name__ == "__main__":
                         new_file.write(line)
         remove('config.ini')
         move(abs_path, 'config.ini')
-        run "python main.py config.ini"
-        #os.system("python main.py config.ini")  
+        #run "python main.py config.ini"
+        os.system("python main.py config.ini")  
   
