@@ -36,7 +36,7 @@ import preprocessing as pre
 import helper_functions as hf
 import ner
 import nel
-import binary_relation
+import binary_relation_withLight
 import simpleTyping
 
 
