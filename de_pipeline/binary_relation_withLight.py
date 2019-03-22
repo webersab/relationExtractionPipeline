@@ -340,7 +340,7 @@ class BinaryRelationWithLight():
                     if len(lst)>0:
                        ppn=lst[0]
                        ppn=ppn.replace(" ","_")
-                       pred_string+="_"+ppn.encode('utf-8')
+                       pred_string+="_"+ppn.decode('utf-8')
                 # Add modifiers to verbs
                 mods = self.get_modifiers_to_verb(dt, pred_index, [])
                 for mod in mods:
