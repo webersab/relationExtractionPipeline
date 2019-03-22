@@ -33,7 +33,7 @@ class BinaryRelationWithLight():
     def __init__(self, config):
         self.config = config
         self.home = self.config.get('General', 'home')
-        with open(self.home+"verbMap.dat", "rb") as f:
+        with open(self.home+"/verbMap.dat", "rb") as f:
         #with open("/group/project/s1782911/verbMap.dat", "rb") as f:
             verbMap=pickle.load(f)
         self.verbMap=verbMap
