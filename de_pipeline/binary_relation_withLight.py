@@ -14,6 +14,9 @@ from itertools import product
 from collections import OrderedDict
 import pprint
 import pickle
+import ConfigParser
+from datetime import datetime
+from pygermanet.germanet import load_germanet
 
 # Custom
 import helper_functions as hf
@@ -31,12 +34,13 @@ class BinaryRelationWithLight():
         self.config = config
         self.home = self.config.get('General', 'home')
         with open(self.home+"verbMap.dat", "rb") as f:
+        #with open("/group/project/s1782911/verbMap.dat", "rb") as f:
             verbMap=pickle.load(f)
         self.verbMap=verbMap
+        self.gn = load_germanet()
 
         
-    def process(self):
-        #for test puropses I feed in the used files by hand
+    def process(self, files):
         """
         Main method
         Extract binary relations by combining output of the dependency parser and entity linker
@@ -56,11 +60,13 @@ class BinaryRelationWithLight():
         hf.create_files([humanoutfilename, jsonoutfilename], 'utf8')
         for f in files:
             df = self.home + '/' + dpindir + '/' + f
+            #df="/group/project/s1782911/batch_size70_17933456_17933538Parse"
             # Read dependency parse
             dtree = hf.dependency_parse_to_graph(df)
             # Read entities
             filenamestem = df.split('/')[-1]#.split('.')[0]
             ef = self.home+'/'+entfilepath+'/'+filenamestem#+'.json'
+            #ef="/group/project/s1782911/batch_size70_17933456_17933538Entities"
             entities = hf.read_json(ef)
             # Extract binary relations
             res = self.extract(dtree, entities, 1)
@@ -234,7 +240,27 @@ class BinaryRelationWithLight():
                     mods.append(n)
                     mods = self.get_modifiers_to_verb(dt, n, mods)
         return mods
+    
+    def typeEntity(self,entity,gn):  
+        lemmatized= gn.lemmatise(entity)[0]+'.n.1'
+        try:
+            synset=gn.synset(lemmatized).hypernym_paths
+        except:
+            if entity in ["ich","du","er","sie","Sie","es", "wir", "ihr","Ihr","Sie|sie"]:
+                return "PERSON"
+            else:
+                return "MISC"
 
+        if "Mensch" in str(synset):
+            return "PERSON"
+        elif ("Ereignis"in str(synset)) or ("Geschehnis"in str(synset)) or ("Vorfall" in str(synset)):
+            return "EVENT"
+        elif ("Organisation"in str(synset)) or ("Gruppe"in str(synset)) or ("Institution" in str(synset)):
+            return "ORGANIZATION"
+        elif ("Gegend"in str(synset)) or ("Ortschaft"in str(synset)) or ("Siedlung"in str(synset)) or ("Stelle" in str(synset)):
+            return "LOCATION"
+        else:
+            return "MISC"
     
     def get_relations(self, dt, ent):
         """
@@ -249,6 +275,13 @@ class BinaryRelationWithLight():
             if ent1['entityType'] == 'com' and ent2['entityType'] == 'com':
                 valid_combination = False
             else:
+                #GermaNet typing goes here. Figer type gets substituted with Germanet type.
+                if ent1['entityType'] == 'com':
+                    newType=self.typeEntity(ent1["namedEntity"], self.gn)
+                    ent1["FIGERType"]=newType
+                elif ent2['entityType'] == 'com':
+                    newType=self.typeEntity(ent2["namedEntity"], self.gn)
+                    ent2["FIGERType"]=newType
                 valid_combination = True
             if pair[0] != pair[1] and valid_combination:
                 ("ent1, ent2 before get predicate: ",ent1,ent2)
@@ -355,3 +388,13 @@ class BinaryRelationWithLight():
                     s += rel[4] + '\n'
                 s += '\n'
                 f.write(s)
+    
+    
+if __name__ == "__main__":
+    print("HUPHUP")
+    print('Started at: '+str(datetime.now()))
+    cfg = ConfigParser.ConfigParser()
+    cfg.read("config.ini")
+    
+    b=BinaryRelationWithLight(cfg)
+    b.process()
