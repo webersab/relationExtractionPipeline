@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # "parsing.py" module
     unstableparserpath = configmap.get('UnstableParser','path')
     sys.path.insert(0,unstableparserpath)
-    import parsing
+    #import parsing
     # Get pipeline steps for full / partial execution as specified in config
     steps = get_pipeline_steps(configmap)
     parallel_steps = steps[0]
@@ -170,6 +170,8 @@ if __name__ == "__main__":
         batchnamesfile = homedir + '/' + configmap.get('General','batches_file')
         batch_list=hf.extract_file_names(batchnamesfile)
         bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
-        bin_rel.process(batch_list)
+        p=mp.Pool(3)
+        p.map(bin_rel.process(),batch_list)
+        #bin_rel.process(batch_list)
     # Exit
     logging.info('Finished at: '+str(datetime.now())+'\n\n')
