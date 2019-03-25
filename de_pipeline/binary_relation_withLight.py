@@ -17,6 +17,8 @@ import pickle
 import ConfigParser
 from datetime import datetime
 from pygermanet.germanet import load_germanet
+import copy_reg
+import types
 
 # Custom
 import helper_functions as hf
@@ -39,6 +41,9 @@ class BinaryRelationWithLight():
             else:
                 break
             return func.__get__(obj, cls)
+    
+
+    #copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
     """
     Perform binary relation extraction

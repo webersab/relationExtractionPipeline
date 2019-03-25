@@ -38,6 +38,8 @@ import ner
 import nel
 import binary_relation_withLight
 import simpleTyping
+import copy_reg
+import types
 
 
 def get_config(configfile):
