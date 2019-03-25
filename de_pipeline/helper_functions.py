@@ -133,3 +133,14 @@ def read_group_batches(filename):
     except IOError as e:
         print(e)
     return l
+
+def extract_file_names(filename):
+    l = []
+    try:
+        with open(filename) as f:
+            for line in f:
+                element = line.rstrip('\n')
+                l.append(element)
+    except IOError as e:
+        print(e)
+    return l

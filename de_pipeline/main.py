@@ -166,7 +166,9 @@ if __name__ == "__main__":
     """
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
     if rel_extraction:
-        batch_list = list(chain(*batch_groups_list))
+        #batch_list = list(chain(*batch_groups_list))
+        batchnamesfile = homedir + '/' + configmap.get('General','batches_file')
+        batch_list=hf.extract_file_names(batchnamesfile)
         bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
         bin_rel.process(batch_list)
     # Exit
