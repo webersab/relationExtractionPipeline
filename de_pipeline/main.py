@@ -169,7 +169,8 @@ if __name__ == "__main__":
         batchnamesfile = homedir + '/' + configmap.get('General','batches_file')
         batch_list=hf.extract_file_names(batchnamesfile)
         bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
-        p=mp.Pool(3)
+        p=mp.Pool(processes=cores)
+        print("created pool")
         p.map(bin_rel.process,batch_list)
         #bin_rel.process(batch_list)
     # Exit
