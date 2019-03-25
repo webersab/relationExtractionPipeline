@@ -140,7 +140,6 @@ if __name__ == "__main__":
     else:
         # Read batch groups from file
         batch_groups_list = hf.read_group_batches(batchgroupsfile)
-        print(batch_groups_list)
     # Implement pipeline steps for which parallelisation makes sense
     for step in parallel_steps:
         # Set up a pool of workers
@@ -171,7 +170,7 @@ if __name__ == "__main__":
         batch_list=hf.extract_file_names(batchnamesfile)
         bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
         p=mp.Pool(3)
-        p.map(bin_rel.process(),batch_list)
+        p.map(bin_rel.process,batch_list)
         #bin_rel.process(batch_list)
     # Exit
     logging.info('Finished at: '+str(datetime.now())+'\n\n')
