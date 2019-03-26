@@ -40,8 +40,8 @@ if __name__ == "__main__":
     # Get command line arguments
     configfile = sys.argv[1]
     # Get configuration settings
-    cfg = ConfigParser.ConfigParser()
-    configmap = cfg.read(configfile)
+    #cfg = ConfigParser.ConfigParser()
+    configmap = get_config(configfile)
     file = sys.argv[2]
     bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
     bin_rel.process(file)
