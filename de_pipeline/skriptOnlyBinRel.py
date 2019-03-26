@@ -19,6 +19,13 @@ import simpleTyping
 import copy_reg
 import types
 
+def get_config(configfile):
+    """
+    Extract config json from file 
+    """
+    cfg = ConfigParser.ConfigParser()
+    cfg.read(configfile)
+    return cfg
 
 
 if __name__ == "__main__":
@@ -31,7 +38,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename='pipeline.log',level=logging.DEBUG)
     logging.info('Started at: '+str(datetime.now()))
     # Get command line arguments
-    configfile = sys.argv[1]
+    #configfile = sys.argv[1]
     # Get configuration settings
     cfg = ConfigParser.ConfigParser()
     configmap = cfg.read("config.ini")
