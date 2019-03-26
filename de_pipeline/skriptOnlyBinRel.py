@@ -38,11 +38,11 @@ if __name__ == "__main__":
     logging.basicConfig(filename='pipeline.log',level=logging.DEBUG)
     logging.info('Started at: '+str(datetime.now()))
     # Get command line arguments
-    configfile = sys.argv[1]
+    configfile = "config.ini"
     # Get configuration settings
     #cfg = ConfigParser.ConfigParser()
     configmap = get_config(configfile)
-    file = sys.argv[2]
+    file = sys.argv[1]
     bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
     bin_rel.process(file)
     
