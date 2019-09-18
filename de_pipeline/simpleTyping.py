@@ -20,6 +20,23 @@ from agdistis import Agdistis
 from datetime import datetime
 
 class SimpleTyping():
+
+    def _pickle_method(method):
+        func_name = method.im_func.__name__
+        obj = method.im_self
+        cls = method.im_class
+        return _unpickle_method, (func_name, obj, cls)
+        
+    def _unpickle_method(func_name, obj, cls):
+        for cls in cls.mro():
+            try:
+                func = cls.__dict__[func_name]
+            except KeyError:
+                pass
+            else:
+                break
+            return func.__get__(obj, cls)
+    
     
     """
     Perform simple typing using NER tags and GermaNet
@@ -158,13 +175,17 @@ class SimpleTyping():
                     overlaps.append(ent_tagged[t][1])
         # Remove the overlaps
         tagged = []
-        for t in range(0,len(ner_tagged)):
-            if ner_tagged[t][1] != '0':
-                tagged.append(ner_tagged[t])
-            elif ent_tagged[t][1] != '0' and ent_tagged[t][1] not in overlaps:
-                tagged.append(ent_tagged[t])
-            else:
-                tagged.append(ner_tagged[t])
+        try:
+            for t in range(0,len(ner_tagged)):
+                if ner_tagged[t][1] != '0':
+                    tagged.append(ner_tagged[t])
+                elif ent_tagged[t][1] != '0' and ent_tagged[t][1] not in overlaps:
+                    tagged.append(ent_tagged[t])
+                else:
+                    tagged.append(ner_tagged[t])
+        except IndexError:
+            print("Index error in simple typing")
+            tagged.append(ner_tagged[t])
         return tagged   
 
     def create_map_entities(self, tagged):

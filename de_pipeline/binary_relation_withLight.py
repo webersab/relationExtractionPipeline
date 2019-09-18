@@ -61,44 +61,45 @@ class BinaryRelationWithLight():
         self.gn = load_germanet()
 
         
-    def process(self, f):
+    def process(self, files):
         """
         Main method
         Extract binary relations by combining output of the dependency parser and entity linker
         """
         dicttypes = {}
-        print('process: Extract binary relations')
-        print("file ",f)
+        print('process: Extract binary relations, Im here')
+        #print("files ",f)
         #common_entities = self.config.get('NEL','common_entities')
         entfilepath = self.config.get('SimpleType', 'out_dir')
         dpindir = self.config.get('UnstableParser','post_proc_out_dir')
         # Construct output file names:
         outdir = self.config.get('Output','out_dir')
         humanoutfile = self.config.get('Output','human_readable_file')
-        humanoutfilename = self.home + '/' + outdir + '/' + humanoutfile+str(f)
+        humanoutfilename = self.home + '/' + outdir + '/' + humanoutfile
+        print(humanoutfilename)
         jsonoutfile = self.config.get('Output', 'json_file')
-        jsonoutfilename = self.home + '/' + outdir + '/' + jsonoutfile+str(f)
+        jsonoutfilename = self.home + '/' + outdir + '/' + jsonoutfile
         # Create empty output files (to which data will be appended):
-        hf.create_files([humanoutfilename, jsonoutfilename], 'utf8')
-        #for f in files:
-        df = self.home + '/' + dpindir + '/' + f
-        #df="/group/project/s1782911/batch_size70_17933456_17933538Parse"
-        # Read dependency parse
-        dtree = hf.dependency_parse_to_graph(df)
-        # Read entities
-        filenamestem = df.split('/')[-1]#.split('.')[0]
-        ef = self.home+'/'+entfilepath+'/'+filenamestem#+'.json'
-        #ef="/group/project/s1782911/batch_size70_17933456_17933538Entities"
-        entities = hf.read_json(ef)
-        # Extract binary relations
-        res = self.extract(dtree, entities, 1)
-        relations = res[0]
-        jsonlist = res[1]
-        dicttypes = self.update_dict_types(dicttypes, res[2])
-        # Write to human readable file
-        self.write_to_human_readable_file(relations, humanoutfilename)
-        # Write to json format file
-        self.output_to_json(jsonlist, jsonoutfilename)
+        hf.create_files([humanoutfilename,jsonoutfilename], 'utf8')
+        for f in files:
+            df = self.home + '/' + dpindir + '/' + f
+            #df="/group/project/s1782911/batch_size70_17933456_17933538Parse"
+            # Read dependency parse
+            dtree = hf.dependency_parse_to_graph(df)
+            # Read entities
+            filenamestem = df.split('/')[-1]#.split('.')[0]
+            ef = self.home+'/'+entfilepath+'/'+filenamestem#+'.json'
+            #ef="/group/project/s1782911/batch_size70_17933456_17933538Entities"
+            entities = hf.read_json(ef)
+            # Extract binary relations
+            res = self.extract(dtree, entities, 1)
+            relations = res[0]
+            jsonlist = res[1]
+            dicttypes = self.update_dict_types(dicttypes, res[2])
+            # Write to human readable file
+            self.write_to_human_readable_file(relations, humanoutfilename)
+            # Write to json format file
+            self.output_to_json(jsonlist, jsonoutfilename)
         # Write type list to file
         self.output_type_list(dicttypes)
 
@@ -344,7 +345,7 @@ class BinaryRelationWithLight():
                 if 'compound:prt' in dt.nodes[ent1head]['deps']:
                     for prt in dt.nodes[ent1head]['deps']['compound:prt']:
                         pred_string += '_' + dt.nodes[prt]['lemma']
-                #checking for light verb constructions goes here
+                #checking for light verb constructions in verb map goes here
                 if pred_string in self.verbMap.keys():
                     thesePPandN=[]
                     predDependencies=dt.nodes[pred_index]['deps'].values()

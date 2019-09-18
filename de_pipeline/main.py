@@ -144,13 +144,20 @@ if __name__ == "__main__":
         batch_groups_list = hf.read_group_batches(batchgroupsfile)
     # Implement pipeline steps for which parallelisation makes sense
     for step in parallel_steps:
-        # Set up a pool of workers
-        pool = mp.Pool(processes=cores)
-        process_batch_group_with_instance=partial(process_batch_group, instance_to_create=step)
-        pool.map(process_batch_group_with_instance, batch_groups_list)
-        pool.close()
-        pool.join()
-        pool.terminate()
+        try:
+            # Set up a pool of workers
+            pool = mp.Pool(processes=cores)
+            process_batch_group_with_instance=partial(process_batch_group, instance_to_create=step)
+            pool.map(process_batch_group_with_instance, batch_groups_list)
+        except KeyboardInterrupt:
+            print "Caught KeyboardInterrupt, terminating workers"
+            pool.terminate()
+            pool.join()
+        else:
+            pool.close()
+            pool.join()
+            pool.terminate()
+
     # Try and do nel with 5 threads only
     """
     if nel:
@@ -167,13 +174,14 @@ if __name__ == "__main__":
     """
     # Extract binary relations in series (I/O bound, will not benefit from parallelisation)
     if rel_extraction:
-        #batch_list = list(chain(*batch_groups_list))
+        print("I'm in the right if clause!")
+        batch_list = list(chain(*batch_groups_list))
         batchnamesfile = homedir + '/' + configmap.get('General','batches_file')
-        batch_list=hf.extract_file_names(batchnamesfile)
+        #batch_list=hf.extract_file_names(batchnamesfile)
         bin_rel = binary_relation_withLight.BinaryRelationWithLight(configmap)
-        p=mp.Pool(processes=cores)
-        print("created pool")
-        p.map(bin_rel.process,batch_list)
-        #bin_rel.process(batch_list)
+        #p=mp.Pool(processes=cores)
+        #print("created pool")
+        #p.map(bin_rel.process,batch_list)
+        bin_rel.process(batch_list)
     # Exit
     logging.info('Finished at: '+str(datetime.now())+'\n\n')

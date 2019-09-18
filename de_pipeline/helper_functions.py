@@ -15,7 +15,7 @@ def dependency_parse_to_graph(filename):
     data = ''
     dtree = []
     with open(filename, 'r') as f:
-        for line in f:
+        for line_num,line in enumerate(f):
             if line[0] != '#':
                 if 'root' in line:
                     elements = line.split('\t')
@@ -23,10 +23,17 @@ def dependency_parse_to_graph(filename):
                         elements[7] = 'ROOT'
                         line = '\t'.join(elements)
                 data += line
-                if line == '\n':
-                    dg = DependencyGraph(data.decode('utf8'))
-                    dtree.append(dg)
-                    data = ''
+                if line == '\n' or not line.strip() or line in ['\n', '\r\n'] or len(line.strip()) ==0:
+                    try:
+                        dg = DependencyGraph(data.decode('utf8'))
+                        dtree.append(dg)
+                        data = ''
+                    except AssertionError as e:
+                        print(str(e))
+                        print("In File: ",filename," line: ",line_num)
+                        with open("dataOut"+str(line_num), "w") as f:
+                            f.write(data)
+                        data=''
     return dtree
 
 
