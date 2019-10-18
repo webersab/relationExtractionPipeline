@@ -309,7 +309,7 @@ class BinaryRelationWithLight():
             if pair[0] != pair[1] and valid_combination:
                 #("ent1, ent2 before get predicate: ",ent1,ent2)
                 pred = self.get_predicate(dt, ent1, ent2)
-                print("predicate ",pred)
+                print("predicate ",pred[0])
                 pred_string = pred[0]
                 pred_index = pred[1]
                 negation = self.get_negation(dt, pred_index, False)
@@ -327,7 +327,6 @@ class BinaryRelationWithLight():
     def get_noun_negation(self,dt,ent2):
         ent2deps = dt.nodes[int(ent2['starttok'])]['deps'].keys()
         if 'advmod' in ent2deps:
-            print(dt.nodes[int(ent2['starttok'])]['deps'])
             advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmod']
             for m in advmods:
                 if dt.nodes[m]['tag']=='PIAT':
