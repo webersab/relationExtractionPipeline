@@ -331,6 +331,7 @@ class BinaryRelationWithLight():
         passive = False
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
+        #print(dt.nodes[int(ent1['starttok'])]['word'] , dt.nodes[int(ent2['starttok'])]['word'])
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
@@ -372,6 +373,19 @@ class BinaryRelationWithLight():
                 if 'case' in dt.nodes[ent2['starttok']]['deps']:
                     for prep in dt.nodes[ent2['starttok']]['deps']['case']:
                         pred_string += '.' + dt.nodes[prep]['lemma']
+        #this is where I check for object attachment
+        elif (ent1rel in ['nsubj', 'nsubj:pass','dep']) and (ent2rel in ['nmod']):
+            if pred_string=="":
+                pred_index=dt.nodes[int(ent1['starttok'])]['head']
+                if "obj" in dt.nodes[pred_index]['deps'].keys():
+                    predDependencies=dt.nodes[pred_index]['deps']['obj']
+                    for node in dt.nodes:
+                        if (node in predDependencies) and dt.nodes[node]['ctag']=='NOUN' and ('nmod' in dt.nodes[node]['deps'].keys()):
+                            nounDependencies=dt.nodes[node]['deps']['nmod']
+                            pred_string = dt.nodes[pred_index]['lemma']
+                            ent2Dependencies=dt.nodes[int(ent2['starttok'])]['deps']
+                            if (int(ent2['starttok']) in nounDependencies) and pred_string=="haben" and ('case' in ent2Dependencies):
+                                pred_string+="_"+dt.nodes[node]['lemma']
         return (pred_string, pred_index, passive)
 
 
@@ -418,6 +432,7 @@ if __name__ == "__main__":
     print('Started at: '+str(datetime.now()))
     cfg = ConfigParser.ConfigParser()
     cfg.read("config.ini")
-    
+    f="batch_size70_52042173_52042214"
+
     b=BinaryRelationWithLight(cfg)
-    b.process()
+    b.process([f])
