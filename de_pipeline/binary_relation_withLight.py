@@ -307,11 +307,13 @@ class BinaryRelationWithLight():
                     ent2["FIGERType"]=newType
                 valid_combination = True
             if pair[0] != pair[1] and valid_combination:
-                ("ent1, ent2 before get predicate: ",ent1,ent2)
+                #("ent1, ent2 before get predicate: ",ent1,ent2)
                 pred = self.get_predicate(dt, ent1, ent2)
                 pred_string = pred[0]
                 pred_index = pred[1]
                 negation = self.get_negation(dt, pred_index, False)
+                nounNegated=self.get_noun_negation(dt,ent2)
+                negation = negation or nounNegated
                 passive = pred[2]
                 if passive: # Swap entities
                     ent1 = ent[pair[1]]
@@ -320,6 +322,15 @@ class BinaryRelationWithLight():
                 if pred_string != '':
                     rels.append((ent1,ent2,pred_string,negation,string,pred_index))
         return rels
+
+    def get_noun_negation(dt,ent2):
+        ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
+        if ent2rel in ['advmod']:
+            advmods=dt.nodes[int(ent2['starttok'])]['rel']['advmod']
+            for m in advmods:
+                if dt.nodes[node]['Xpostag']=='PIAT':
+                    return True
+        return False
 
 
     def get_predicate(self, dt, ent1, ent2):
