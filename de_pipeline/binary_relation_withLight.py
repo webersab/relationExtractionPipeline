@@ -331,7 +331,7 @@ class BinaryRelationWithLight():
             advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmod']
             print("advmods ",advmods)
             for m in advmods:
-                if dt.nodes[m]['Xpostag']=='PIAT':
+                if dt.nodes[m]['tag']=='PIAT':
                     print("bingo")
                     return True
         return False
