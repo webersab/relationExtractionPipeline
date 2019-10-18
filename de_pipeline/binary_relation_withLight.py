@@ -324,7 +324,6 @@ class BinaryRelationWithLight():
         return rels
 
     def get_noun_negation(self,dt,ent2):
-        print("-------")
         ent2deps = dt.nodes[int(ent2['starttok'])]['deps'].keys()
         if 'advmod' in ent2deps:
             print(dt.nodes[int(ent2['starttok'])]['deps'])
@@ -333,6 +332,7 @@ class BinaryRelationWithLight():
             for m in advmods:
                 if dt.nodes[m]['tag']=='PIAT':
                     print("bingo")
+                    print(self.get_sentence(dt))
                     return True
         return False
 
