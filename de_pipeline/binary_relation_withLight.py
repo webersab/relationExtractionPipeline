@@ -325,10 +325,10 @@ class BinaryRelationWithLight():
 
     def get_noun_negation(self,dt,ent2):
         print("-------")
-        ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
-        print("ent2rel ",ent2rel)
-        if ent2rel in ['advmod']:
-            advmods=dt.nodes[int(ent2['starttok'])]['rel']['advmod']
+        ent2deps = dt.nodes[int(ent2['starttok'])]['deps'].keys()
+        print("ent2deps ",ent2deps)
+        if 'advmod' in ent2deps:
+            advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmods']
             print("advmods ",advmods)
             for m in advmods:
                 if dt.nodes[m]['Xpostag']=='PIAT':
