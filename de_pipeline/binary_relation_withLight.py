@@ -309,11 +309,13 @@ class BinaryRelationWithLight():
             if pair[0] != pair[1] and valid_combination:
                 #("ent1, ent2 before get predicate: ",ent1,ent2)
                 pred = self.get_predicate(dt, ent1, ent2)
-                print("predicate ",pred[0])
                 pred_string = pred[0]
                 pred_index = pred[1]
                 negation = self.get_negation(dt, pred_index, False)
                 nounNegated=self.get_noun_negation(dt,ent2)
+                if nounNegated:
+                    print(self.get_sentence(dt))
+                    print(ent1,ent2,pred_string)
                 negation = negation or nounNegated
                 passive = pred[2]
                 if passive: # Swap entities
@@ -330,8 +332,6 @@ class BinaryRelationWithLight():
             advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmod']
             for m in advmods:
                 if dt.nodes[m]['tag']=='PIAT':
-                    print("bingo")
-                    print(self.get_sentence(dt))
                     return True
         return False
 
@@ -355,6 +355,7 @@ class BinaryRelationWithLight():
             ent2headrel= dt.nodes.get(ent2head)['rel']
             if ent1head == ent2head or (ent2headhead == ent1head and ent2headrel == 'xcomp'):
                 pred_string = dt.nodes[ent1head]['lemma']
+                print("pred str is head ",pred_string)
                 pred_index = ent1head
                 # Check if predicate is a particle verb
                 if 'compound:prt' in dt.nodes[ent1head]['deps']:
