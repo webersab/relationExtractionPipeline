@@ -323,7 +323,7 @@ class BinaryRelationWithLight():
                     rels.append((ent1,ent2,pred_string,negation,string,pred_index))
         return rels
 
-    def get_noun_negation(dt,ent2):
+    def get_noun_negation(self,dt,ent2):
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
         if ent2rel in ['advmod']:
             advmods=dt.nodes[int(ent2['starttok'])]['rel']['advmod']
