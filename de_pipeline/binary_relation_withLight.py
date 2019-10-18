@@ -328,7 +328,7 @@ class BinaryRelationWithLight():
         ent2deps = dt.nodes[int(ent2['starttok'])]['deps'].keys()
         if 'advmod' in ent2deps:
             print(dt.nodes[int(ent2['starttok'])]['deps'])
-            advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmods']
+            advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmod']
             print("advmods ",advmods)
             for m in advmods:
                 if dt.nodes[m]['Xpostag']=='PIAT':
