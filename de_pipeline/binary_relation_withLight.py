@@ -326,8 +326,8 @@ class BinaryRelationWithLight():
     def get_noun_negation(self,dt,ent2):
         print("-------")
         ent2deps = dt.nodes[int(ent2['starttok'])]['deps'].keys()
-        print("ent2deps ",ent2deps)
         if 'advmod' in ent2deps:
+            print(dt.nodes[int(ent2['starttok'])]['deps'])
             advmods=dt.nodes[int(ent2['starttok'])]['deps']['advmods']
             print("advmods ",advmods)
             for m in advmods:
