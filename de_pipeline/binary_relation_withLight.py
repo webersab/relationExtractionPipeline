@@ -339,14 +339,16 @@ class BinaryRelationWithLight():
         if len(ent['namedEntity'].split())>1:
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok'])+i]['rel'] in ['nsubj', 'nsubj:pass','dep']:
-                    return dt.nodes[int(ent['starttok'])+i]['rel']
+                    ent['starttok']= int(ent['starttok'])+i
+                    return dt.nodes[int(ent['starttok'])+i]['rel'], ent
         return ""
     
     def checkOtherWordsInNamedEntity2(self,ent,dt):
         if len(ent['namedEntity'].split())>1:
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok'])+i]['rel'] in ['obj', 'obl','dep']:
-                    return dt.nodes[int(ent['starttok'])+i]['rel']
+                    ent['starttok']= int(ent['starttok'])+i
+                    return dt.nodes[int(ent['starttok'])+i]['rel'], ent
         return ""
 
     def get_predicate(self, dt, ent1, ent2):
@@ -362,13 +364,13 @@ class BinaryRelationWithLight():
         if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
             new1=self.checkOtherWordsInNamedEntity1(ent1,dt)
         if new1 != "":
-            ent1rel=new1
+            ent1rel, ent1=new1
             print("changes entrel in ", ent1)
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
         if ent2rel not in ['obj', 'obl','dep']:
             new2=self.checkOtherWordsInNamedEntity1(ent2,dt)
         if new2 != "":
-            ent2rel=new2
+            ent2rel, ent2=new2
             print("changes entrel in ", ent2)
         #print(dt.nodes[int(ent1['starttok'])]['word'] , dt.nodes[int(ent2['starttok'])]['word'])
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
