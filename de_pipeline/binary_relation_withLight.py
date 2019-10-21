@@ -339,14 +339,14 @@ class BinaryRelationWithLight():
         if len(ent['namedEntity'].split())>1:
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok'])+i]['rel'] in ['nsubj', 'nsubj:pass','dep']:
-                    return dt.nodes[int(ent['starttok']+i)]['rel']
+                    return dt.nodes[int(ent['starttok'])+i]['rel']
         return ""
     
     def checkOtherWordsInNamedEntity2(self,ent,dt):
         if len(ent['namedEntity'].split())>1:
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok'])+i]['rel'] in ['obj', 'obl','dep']:
-                    return dt.nodes[int(ent['starttok']+i)]['rel']
+                    return dt.nodes[int(ent['starttok'])+i]['rel']
         return ""
 
     def get_predicate(self, dt, ent1, ent2):
