@@ -334,7 +334,20 @@ class BinaryRelationWithLight():
                 if dt.nodes[m]['tag']=='PIAT':
                     return True
         return False
-
+    
+    def checkOtherWordsInNamedEntity1(self,ent):
+        if len(ent['namedEntity'].split())>1:
+            for i in range(ent['namedEntity'].split()):
+                if dt.nodes[int(ent['starttok']+i)]['rel'] in ['nsubj', 'nsubj:pass','dep']:
+                    return dt.nodes[int(ent['starttok']+i)]['rel']
+        return ""
+    
+    def checkOtherWordsInNamedEntity2(self,ent):
+        if len(ent['namedEntity'].split())>1:
+            for i in range(ent['namedEntity'].split()):
+                if dt.nodes[int(ent['starttok']+i)]['rel'] in ['obj', 'obl','dep']:
+                    return dt.nodes[int(ent['starttok']+i)]['rel']
+        return ""
 
     def get_predicate(self, dt, ent1, ent2):
         """
@@ -344,7 +357,15 @@ class BinaryRelationWithLight():
         pred_index = -1
         passive = False
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
+        if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
+            new1=checkOtherWordsInNamedEntity1(self,ent1)
+        if new1 != "":
+            ent1rel=new1
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
+        if ent2rel not in ['obj', 'obl','dep']:
+            new2=checkOtherWordsInNamedEntity1(self,ent2)
+        if new2 != "":
+            ent2rel=new2
         #print(dt.nodes[int(ent1['starttok'])]['word'] , dt.nodes[int(ent2['starttok'])]['word'])
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
