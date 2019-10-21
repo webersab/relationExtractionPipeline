@@ -337,14 +337,14 @@ class BinaryRelationWithLight():
     
     def checkOtherWordsInNamedEntity1(self,ent):
         if len(ent['namedEntity'].split())>1:
-            for i in range(ent['namedEntity'].split()):
+            for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok']+i)]['rel'] in ['nsubj', 'nsubj:pass','dep']:
                     return dt.nodes[int(ent['starttok']+i)]['rel']
         return ""
     
     def checkOtherWordsInNamedEntity2(self,ent):
         if len(ent['namedEntity'].split())>1:
-            for i in range(ent['namedEntity'].split()):
+            for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok']+i)]['rel'] in ['obj', 'obl','dep']:
                     return dt.nodes[int(ent['starttok']+i)]['rel']
         return ""
