@@ -360,12 +360,12 @@ class BinaryRelationWithLight():
         new2=""
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
         if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
-            new1=checkOtherWordsInNamedEntity1(self,ent1)
+            new1=self.checkOtherWordsInNamedEntity1(self,ent1)
         if new1 != "":
             ent1rel=new1
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
         if ent2rel not in ['obj', 'obl','dep']:
-            new2=checkOtherWordsInNamedEntity1(self,ent2)
+            new2=self.checkOtherWordsInNamedEntity1(self,ent2)
         if new2 != "":
             ent2rel=new2
         #print(dt.nodes[int(ent1['starttok'])]['word'] , dt.nodes[int(ent2['starttok'])]['word'])
