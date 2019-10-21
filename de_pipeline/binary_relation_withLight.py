@@ -335,14 +335,14 @@ class BinaryRelationWithLight():
                     return True
         return False
     
-    def checkOtherWordsInNamedEntity1(self,ent):
+    def checkOtherWordsInNamedEntity1(self,ent,dt):
         if len(ent['namedEntity'].split())>1:
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok']+i)]['rel'] in ['nsubj', 'nsubj:pass','dep']:
                     return dt.nodes[int(ent['starttok']+i)]['rel']
         return ""
     
-    def checkOtherWordsInNamedEntity2(self,ent):
+    def checkOtherWordsInNamedEntity2(self,ent,dt):
         if len(ent['namedEntity'].split())>1:
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok']+i)]['rel'] in ['obj', 'obl','dep']:
@@ -360,12 +360,12 @@ class BinaryRelationWithLight():
         new2=""
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
         if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
-            new1=self.checkOtherWordsInNamedEntity1(ent1)
+            new1=self.checkOtherWordsInNamedEntity1(ent1,dt)
         if new1 != "":
             ent1rel=new1
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
         if ent2rel not in ['obj', 'obl','dep']:
-            new2=self.checkOtherWordsInNamedEntity1(ent2)
+            new2=self.checkOtherWordsInNamedEntity1(ent2,dt)
         if new2 != "":
             ent2rel=new2
         #print(dt.nodes[int(ent1['starttok'])]['word'] , dt.nodes[int(ent2['starttok'])]['word'])
