@@ -375,7 +375,7 @@ class BinaryRelationWithLight():
             #ent2rel, ent2=new2
             #print("changes entrel in ", ent2, ent2rel)
         print(ent1['namedEntity'],ent1rel, ent2['namedEntity'], ent2rel)
-        if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
+        if ent1rel in ['nsubj', 'nsubj:pass','dep', 'nmod'] and ent2rel in ['obj', 'obl','dep']:
             print("passed")
             if ent1rel == 'nsubj:pass':
                 passive = True
