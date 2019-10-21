@@ -313,9 +313,9 @@ class BinaryRelationWithLight():
                 pred_index = pred[1]
                 negation = self.get_negation(dt, pred_index, False)
                 nounNegated=self.get_noun_negation(dt,ent2)
-                #if nounNegated:
+                if nounNegated:
                     #print(self.get_sentence(dt))
-                    #print(ent1,ent2,pred_string)
+                    print(ent1['namedEntity'],ent2['namedEntity'],pred_string)
                 negation = negation or nounNegated
                 passive = pred[2]
                 if passive: # Swap entities
