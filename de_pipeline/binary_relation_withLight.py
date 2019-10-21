@@ -372,7 +372,7 @@ class BinaryRelationWithLight():
         if new2 != "":
             ent2rel, ent2=new2
             print("changes entrel in ", ent2)
-        #print(dt.nodes[int(ent1['starttok'])]['word'] , dt.nodes[int(ent2['starttok'])]['word'])
+        print(ent1rel, ent2rel)
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
