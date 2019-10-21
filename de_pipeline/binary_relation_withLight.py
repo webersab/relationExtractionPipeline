@@ -356,6 +356,8 @@ class BinaryRelationWithLight():
         pred_string = ''
         pred_index = -1
         passive = False
+        new1=""
+        new2=""
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
         if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
             new1=checkOtherWordsInNamedEntity1(self,ent1)
