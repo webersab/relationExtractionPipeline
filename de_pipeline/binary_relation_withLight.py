@@ -439,7 +439,7 @@ class BinaryRelationWithLight():
         print(dt.nodes[int(ent2['starttok'])]['deps'].keys())
         if "case" in dt.nodes[int(ent2['starttok'])]['deps'].keys():
             for i in dt.nodes[int(ent2['starttok'])]['deps']['case']:
-                return dt.nodes[i]["lemma"]
+                return "_"+dt.nodes[i]["lemma"]
         return""
     
     def checkForHabenPlusObject(self, dt, ent1, ent2):
@@ -453,7 +453,8 @@ class BinaryRelationWithLight():
                     pred_string = dt.nodes[pred_index]['lemma']
                     ent2Dependencies=dt.nodes[int(ent2['starttok'])]['deps']
                     if (int(ent2['starttok']) in nounDependencies) and pred_string=="haben" and ('case' in ent2Dependencies):
-                        pred_string+="_"+dt.nodes[node]['lemma']
+                        caseAttachment=self.get_case_attachment(dt, ent2)
+                        pred_string+="_"+dt.nodes[node]['lemma']+caseAttachment
         return pred_string, pred_index
 
 
