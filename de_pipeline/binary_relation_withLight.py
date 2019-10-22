@@ -361,7 +361,7 @@ class BinaryRelationWithLight():
         new1=""
         new2=""
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
-        print("before change 1 ", en1['namedEntity'],ent1rel)
+        print("before change 1 ", ent1['namedEntity'],ent1rel)
         if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
             print("neigbourhs ",dt.nodes[int(ent1['starttok'])-1]['rel'],dt.nodes[int(ent1['starttok'])]['rel'],dt.nodes[int(ent1['starttok'])+1]['rel'])
             new1=self.checkOtherWordsInNamedEntity1(ent1,dt)
