@@ -413,20 +413,21 @@ class BinaryRelationWithLight():
         #this is where I check for object attachment
         elif (ent1rel in ['nsubj', 'nsubj:pass','dep']) and (ent2rel in ['nmod']):
             if pred_string=="":
-                """
-                pred_index=dt.nodes[int(ent1['starttok'])]['head']
-                if "obj" in dt.nodes[pred_index]['deps'].keys():
-                    predDependencies=dt.nodes[pred_index]['deps']['obj']
-                    for node in dt.nodes:
-                        if (node in predDependencies) and dt.nodes[node]['ctag']=='NOUN' and ('nmod' in dt.nodes[node]['deps'].keys()):
-                            nounDependencies=dt.nodes[node]['deps']['nmod']
-                            pred_string = dt.nodes[pred_index]['lemma']
-                            ent2Dependencies=dt.nodes[int(ent2['starttok'])]['deps']
-                            if (int(ent2['starttok']) in nounDependencies) and pred_string=="haben" and ('case' in ent2Dependencies):
-                                pred_string+="_"+dt.nodes[node]['lemma']
-                """
                 pred_string, pred_index = self.checkForHabenPlusObject(dt, ent1, ent2)
+            if pred_string=="":
+                pred_string, pred_index = self.checkForSeinPlusObject(dt, ent1, ent2)
         return (pred_string, pred_index, passive)
+    
+    def checkForSeinPlusObject(self, dt, ent1, ent2):
+        pred_string=""
+        pred_index=dt.nodes[int(ent1['starttok'])]['head']
+        if ("cop" in dt.nodes[pred_index]['deps'].keys()) and ("nmod" in dt.nodes[pred_index]['deps'].keys()):
+            copulaWordIndex=dt.nodes[pred_index]['deps']['cop']
+            nmodWordIndex=dt.nodes[pred_index]['deps']['nmod']
+            if dt.nodes[copulaWordIndex]["lemma"]== "sein" and nmodWordIndex==ent2['starttok']:
+                pred_string=dt.nodes[pred_index]['lemma']+"_sein"
+        return pred_string, pred_index
+    
     
     def checkForHabenPlusObject(self, dt, ent1, ent2):
         pred_string=""
