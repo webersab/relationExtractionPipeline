@@ -421,13 +421,16 @@ class BinaryRelationWithLight():
     def checkForSeinPlusObject(self, dt, ent1, ent2):
         pred_string=""
         pred_index=dt.nodes[int(ent1['starttok'])]['head']
-        if ("cop" in dt.nodes[pred_index]['deps'].keys()) and ("nmod" in dt.nodes[pred_index]['deps'].keys()):
+        if ("cop" in dt.nodes[pred_index]['deps'].keys()) and ("nmod" in dt.nodes[pred_index]['deps'].keys() or "advmod" in dt.nodes[pred_index]['deps'].keys()):
             copulaWordIndex=dt.nodes[pred_index]['deps']['cop']
-            print(self.get_sentence(dt))
-            print(copulaWordIndex)
-            nmodWordIndex=dt.nodes[pred_index]['deps']['nmod']
-            print("nmod ",nmodWordIndex)
-            print("ent2 ", ent2['starttok'])
+            #print(self.get_sentence(dt))
+            #print(copulaWordIndex)
+            if "nmod" in dt.nodes[pred_index]['deps'].keys():
+                nmodWordIndex=dt.nodes[pred_index]['deps']['nmod']
+            elif "advmod" in dt.nodes[pred_index]['deps'].keys():
+                nmodWordIndex=dt.nodes[pred_index]['deps']['advmod']
+            #print("nmod ",nmodWordIndex)
+            #print("ent2 ", ent2['starttok'])
             if dt.nodes[copulaWordIndex[0]]["lemma"]== "sein":
                 for i in nmodWordIndex:
                     if int(i)==int(ent2['starttok']):
