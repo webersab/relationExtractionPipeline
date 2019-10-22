@@ -421,7 +421,7 @@ class BinaryRelationWithLight():
                             nounDependencies=dt.nodes[node]['deps']['nmod']
                             pred_string = dt.nodes[pred_index]['lemma']
                             ent2Dependencies=dt.nodes[int(ent2['starttok'])]['deps']
-                            if (int(ent2['starttok']) in nounDependencies) and pred_string=="haben" and ('case' in ent2Dependencies):
+                            if (int(ent2['starttok']) in nounDependencies) and (pred_string=="haben" or pred_string=="sein") and ('case' in ent2Dependencies):
                                 pred_string+="_"+dt.nodes[node]['lemma']
         return (pred_string, pred_index, passive)
 
