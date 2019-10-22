@@ -367,7 +367,6 @@ class BinaryRelationWithLight():
             new2=self.checkOtherWordsInNamedEntity1(ent2,dt)
         if new2 != "":
             ent2rel, ent2=new2
-        #print(ent1['namedEntity'],ent1rel, ent2['namedEntity'], ent2rel)
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             if ent1rel == 'nsubj:pass':
                 passive = True
@@ -377,7 +376,6 @@ class BinaryRelationWithLight():
             ent2headrel= dt.nodes.get(ent2head)['rel']
             if ent1head == ent2head or (ent2headhead == ent1head and ent2headrel == 'xcomp'):
                 pred_string = dt.nodes[ent1head]['lemma']
-                #print("pred str is head ",pred_string)
                 pred_index = ent1head
                 # Check if predicate is a particle verb
                 if 'compound:prt' in dt.nodes[ent1head]['deps']:
@@ -395,8 +393,6 @@ class BinaryRelationWithLight():
                             noun=dt.nodes[node]['lemma']
                             PPandN=prep+" "+noun
                             thesePPandN.append(PPandN.encode('utf-8'))
-                    #print(thesePPandN)
-                    #print(self.verbMap[pred_string])
                     lst = [value for value in thesePPandN if value in self.verbMap[pred_string]] 
                     if len(lst)>0:
                        ppn=lst[0]
@@ -435,8 +431,6 @@ class BinaryRelationWithLight():
         return pred_string, pred_index
     
     def get_case_attachment(self,dt,ent2):
-        print("in case attach")
-        print(dt.nodes[int(ent2['starttok'])]['deps'].keys())
         if "case" in dt.nodes[int(ent2['starttok'])]['deps'].keys():
             for i in dt.nodes[int(ent2['starttok'])]['deps']['case']:
                 return "_"+dt.nodes[i]["lemma"]
