@@ -430,7 +430,7 @@ class BinaryRelationWithLight():
             print("ent2 ", ent2['starttok'])
             if dt.nodes[copulaWordIndex[0]]["lemma"]== "sein":
                 for i in nmodWordIndex:
-                    if int(i)==inf(ent2['starttok']):
+                    if int(i)==int(ent2['starttok']):
                         pred_string=dt.nodes[pred_index]['lemma']+"_sein"
         return pred_string, pred_index
     
