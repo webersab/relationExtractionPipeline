@@ -429,6 +429,7 @@ class BinaryRelationWithLight():
         return (pred_string, pred_index, passive)
     
     def checkForHabenPlusObject(self, dt, ent1, ent2):
+        pred_string=""
         pred_index=dt.nodes[int(ent1['starttok'])]['head']
         if "obj" in dt.nodes[pred_index]['deps'].keys():
             predDependencies=dt.nodes[pred_index]['deps']['obj']
