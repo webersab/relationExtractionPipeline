@@ -423,6 +423,8 @@ class BinaryRelationWithLight():
         pred_index=dt.nodes[int(ent1['starttok'])]['head']
         if ("cop" in dt.nodes[pred_index]['deps'].keys()) and ("nmod" in dt.nodes[pred_index]['deps'].keys()):
             copulaWordIndex=dt.nodes[pred_index]['deps']['cop']
+            print(self.get_sentence(dt))
+            print(copulaWordIndex)
             nmodWordIndex=dt.nodes[pred_index]['deps']['nmod']
             if dt.nodes[copulaWordIndex]["lemma"]== "sein" and nmodWordIndex==ent2['starttok']:
                 pred_string=dt.nodes[pred_index]['lemma']+"_sein"
