@@ -423,20 +423,22 @@ class BinaryRelationWithLight():
         pred_index=dt.nodes[int(ent1['starttok'])]['head']
         if ("cop" in dt.nodes[pred_index]['deps'].keys()) and ("nmod" in dt.nodes[pred_index]['deps'].keys() or "advmod" in dt.nodes[pred_index]['deps'].keys()):
             copulaWordIndex=dt.nodes[pred_index]['deps']['cop']
-            #print(self.get_sentence(dt))
-            #print(copulaWordIndex)
             if "nmod" in dt.nodes[pred_index]['deps'].keys():
                 nmodWordIndex=dt.nodes[pred_index]['deps']['nmod']
             elif "advmod" in dt.nodes[pred_index]['deps'].keys():
                 nmodWordIndex=dt.nodes[pred_index]['deps']['advmod']
-            #print("nmod ",nmodWordIndex)
-            #print("ent2 ", ent2['starttok'])
             if dt.nodes[copulaWordIndex[0]]["lemma"]== "sein":
                 for i in nmodWordIndex:
                     if int(i)==int(ent2['starttok']):
-                        pred_string=dt.nodes[pred_index]['lemma']+"_sein"
+                        caseAttachment=self.get_case_attachment(dt, ent2)
+                        pred_string=dt.nodes[pred_index]['lemma']+"_sein"+caseAttachment
         return pred_string, pred_index
     
+    def get_case_attachment(self,dt,ent2):
+        if "case" in dt.nodes[ent2['starttok']]['deps']:
+            for i in dt.nodes[ent2['starttok']]['deps']:
+                return dt.nodes[i]["lemma"]
+        return""
     
     def checkForHabenPlusObject(self, dt, ent1, ent2):
         pred_string=""
