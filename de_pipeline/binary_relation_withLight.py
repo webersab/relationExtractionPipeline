@@ -340,7 +340,7 @@ class BinaryRelationWithLight():
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok'])+i]['rel'] in ['nsubj', 'nsubj:pass','dep']:
                     ent['starttok']= int(ent['starttok'])+i
-                    return dt.nodes[int(ent['starttok'])+i]['rel'], ent
+                    return dt.nodes[int(ent['starttok'])]['rel'], ent
         return ""
     
     def checkOtherWordsInNamedEntity2(self,ent,dt):
@@ -348,7 +348,7 @@ class BinaryRelationWithLight():
             for i in range(len(ent['namedEntity'].split())):
                 if dt.nodes[int(ent['starttok'])+i]['rel'] in ['obj', 'obl','dep']:
                     ent['starttok']= int(ent['starttok'])+i
-                    return dt.nodes[int(ent['starttok'])+i]['rel'], ent
+                    return dt.nodes[int(ent['starttok'])]['rel'], ent
         return ""
 
     def get_predicate(self, dt, ent1, ent2):
@@ -361,7 +361,7 @@ class BinaryRelationWithLight():
         new1=""
         new2=""
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
-        print("before change 1 ", ent1rel)
+        print("before change 1 ", en1['namedEntity'],ent1rel)
         if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
             print("neigbourhs ",dt.nodes[int(ent1['starttok'])-1]['rel'],dt.nodes[int(ent1['starttok'])]['rel'],dt.nodes[int(ent1['starttok'])+1]['rel'])
             new1=self.checkOtherWordsInNamedEntity1(ent1,dt)
@@ -369,13 +369,11 @@ class BinaryRelationWithLight():
             ent1rel, ent1=new1
             print("changes entrel in ", ent1, ent1rel)
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
-        print("before change 2 ", ent2rel)
         if ent2rel not in ['obj', 'obl','dep']:
             new2=self.checkOtherWordsInNamedEntity1(ent2,dt)
         if new2 != "":
             ent2rel, ent2=new2
-            print("changes entrel in ", ent2, ent2rel)
-        print(ent1['namedEntity'],ent1rel, ent2['namedEntity'], ent2rel)
+        #print(ent1['namedEntity'],ent1rel, ent2['namedEntity'], ent2rel)
         if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             print("passed")
             if ent1rel == 'nsubj:pass':
