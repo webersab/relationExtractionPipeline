@@ -426,7 +426,7 @@ class BinaryRelationWithLight():
             print(self.get_sentence(dt))
             print(copulaWordIndex)
             nmodWordIndex=dt.nodes[pred_index]['deps']['nmod']
-            if dt.nodes[copulaWordIndex]["lemma"]== "sein" and nmodWordIndex==ent2['starttok']:
+            if dt.nodes[copulaWordIndex[0]]["lemma"]== "sein" and nmodWordIndex==ent2['starttok']:
                 pred_string=dt.nodes[pred_index]['lemma']+"_sein"
         return pred_string, pred_index
     
