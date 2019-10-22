@@ -436,9 +436,9 @@ class BinaryRelationWithLight():
     
     def get_case_attachment(self,dt,ent2):
         print("in case attach")
-        print(dt.nodes[ent2['starttok']]['deps'].keys())
-        if "case" in dt.nodes[ent2['starttok']]['deps'].keys():
-            for i in dt.nodes[ent2['starttok']]['deps']['case']:
+        print(dt.nodes[int(ent2['starttok'])]['deps'].keys())
+        if "case" in dt.nodes[int(ent2['starttok'])]['deps'].keys():
+            for i in dt.nodes[int(ent2['starttok'])]['deps']['case']:
                 return dt.nodes[i]["lemma"]
         return""
     
