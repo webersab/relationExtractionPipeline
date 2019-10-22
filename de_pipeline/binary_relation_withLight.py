@@ -361,21 +361,22 @@ class BinaryRelationWithLight():
         new1=""
         new2=""
         ent1rel = dt.nodes[int(ent1['starttok'])]['rel']
-        #print("before change 1 ", ent1rel)
-        #if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
-            #new1=self.checkOtherWordsInNamedEntity1(ent1,dt)
-        #if new1 != "":
-            #ent1rel, ent1=new1
-            #print("changes entrel in ", ent1, ent1rel)
+        print("before change 1 ", ent1rel)
+        if ent1rel not in ['nsubj', 'nsubj:pass','dep']:
+            print("neigbourhs ",dt.nodes[int(ent1['starttok'])-1]['rel'],dt.nodes[int(ent1['starttok'])]['rel'],dt.nodes[int(ent1['starttok'])+1]['rel'])
+            new1=self.checkOtherWordsInNamedEntity1(ent1,dt)
+        if new1 != "":
+            ent1rel, ent1=new1
+            print("changes entrel in ", ent1, ent1rel)
         ent2rel = dt.nodes[int(ent2['starttok'])]['rel']
-        #print("before change 2 ", ent2rel)
-        #if ent2rel not in ['obj', 'obl','dep']:
-            #new2=self.checkOtherWordsInNamedEntity1(ent2,dt)
-        #if new2 != "":
-            #ent2rel, ent2=new2
-            #print("changes entrel in ", ent2, ent2rel)
+        print("before change 2 ", ent2rel)
+        if ent2rel not in ['obj', 'obl','dep']:
+            new2=self.checkOtherWordsInNamedEntity1(ent2,dt)
+        if new2 != "":
+            ent2rel, ent2=new2
+            print("changes entrel in ", ent2, ent2rel)
         print(ent1['namedEntity'],ent1rel, ent2['namedEntity'], ent2rel)
-        if ent1rel in ['nsubj', 'nsubj:pass','dep', 'nmod'] and ent2rel in ['obj', 'obl','dep']:
+        if ent1rel in ['nsubj', 'nsubj:pass','dep'] and ent2rel in ['obj', 'obl','dep']:
             print("passed")
             if ent1rel == 'nsubj:pass':
                 passive = True
